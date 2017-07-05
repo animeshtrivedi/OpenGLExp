@@ -1,38 +1,10 @@
 #include <stdio.h>
-
-#include <stdio.h>
-#include <stdlib.h>
-
-#include <GL/freeglut.h>
-#include <GL/gl.h>
-
-void drawTriangle()
-{
-    glClearColor(0.4, 0.4, 0.4, 0.4);
-    glClear(GL_COLOR_BUFFER_BIT);
-
-    glColor3f(1.0, 1.0, 1.0);
-    glOrtho(-1.0, 1.0, -1.0, 1.0, -1.0, 1.0);
-
-    glBegin(GL_TRIANGLES);
-    glVertex3f(-0.7, 0.7, 0);
-    glVertex3f(0.7, 0.7, 0);
-    glVertex3f(0, -1, 0);
-    glEnd();
-
-    glFlush();
-}
-
+#include "all.h"
 
 int main(int argc, char **argv) {
-    printf("Hello, World!\n");
+    printf("Hello, World to OpenGL experiments!\n");
 
-    glutInit(&argc, argv);
-    glutInitDisplayMode(GLUT_SINGLE);
-    glutInitWindowSize(500, 500);
-    glutInitWindowPosition(100, 100);
-    glutCreateWindow("OpenGL - Creating a triangle");
-    glutDisplayFunc(drawTriangle);
-    glutMainLoop();
+    //triangle_main(argc, argv);
+    accanti_main(argc, argv);
     return 0;
 }
