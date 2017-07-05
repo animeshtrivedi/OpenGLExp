@@ -11,7 +11,6 @@
 
 #define WIDTH 1000
 #define HEIGHT 400
-#define OFFSET 200
 
 static int curr_width = WIDTH;
 static int curr_height = HEIGHT;
@@ -75,16 +74,30 @@ static void display()
     /* drawing commands would go here, if we had any yet... */
     //drawgrid();
 
+#ifdef EX1
     glColor3f(0.0f, 0.0f, 0.0f);
     glRectf(-0.75f,0.75f, 0.75f, -0.75f);
 
 
+    glBegin(GL_QUADS);
+    glColor3f(0.5f, 0.0f, 1.0f); // make this vertex purple
+    glVertex2f(-0.75, 0.75);
+    glColor3f(1.0f, 0.0f, 0.0f); // make this vertex red
+    glVertex2f(-0.75, -0.75);
+    //glColor3f(0.0f, 1.0f, 0.0f); // make this vertex green
+    glVertex2f(0.75, -0.75);
+    //glColor3f(1.0f, 1.0f, 0.0f); // make this vertex yellow
+    glVertex2f(0.75, 0.75);
+    glEnd();
+#endif
+//    FGAPI void    FGAPIENTRY glutGameModeString( const char* string );
+//    FGAPI int     FGAPIENTRY glutEnterGameMode( void );
+//    FGAPI void    FGAPIENTRY glutLeaveGameMode( void );
+//    FGAPI int     FGAPIENTRY glutGameModeGet( GLenum query );
+
+    glutSolidTeapot(0.5f);
+    glFlush();
     glutSwapBuffers();
-
-
-//    glFlush();
-//    glutSwapBuffers();
-//    glutPostRedisplay();
 }
 
 

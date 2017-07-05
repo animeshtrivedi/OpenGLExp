@@ -17,6 +17,8 @@ int main(int argc, char **argv) {
 #endif
     //triangle_main(argc, argv);
     //accanti_main(argc, argv);
-    grid_main(argc, argv);
+    //grid_main(argc, argv);
+    //exp_main(argc, argv);
+    teapot_main(argc, argv);
     return 0;
 }
