@@ -21,6 +21,11 @@ int main(int argc, char **argv) {
     //exp_main(argc, argv);
     //teapot_main(argc, argv);
     //cyril_main(argc, argv);
-    xbox_main(argc, argv);
+    //xbox_main(argc, argv);
+
+    //together_main(argc, argv);
+
+    // does not work yet
+    dualwindow2_main(argc, argv);
     return 0;
 }

@@ -5,14 +5,10 @@
 //
 // Created by atr on 05.07.17.
 //
+#ifdef ATR_CYRIL
 
 #include <stdio.h>
 #include <malloc.h>
-#include <stddef.h>
-#include <stdlib.h>
-#include <stdlib.h>
-
-#include <math.h>
 #include <GL/glut.h>
 #include <string.h>
 
@@ -313,3 +309,4 @@ int cyril_main (int argc, char **argv)
 
     return 0;
 }
+#endif
