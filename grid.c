@@ -58,8 +58,7 @@ static void init (void)
 static void display()
 {
     drawgrid();
-     glFlush();
-     glutSwapBuffers();
+    glutSwapBuffers();
 }
 
 int grid_main (int argc, char **argv)

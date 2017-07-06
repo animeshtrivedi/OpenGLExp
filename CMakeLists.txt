@@ -3,7 +3,7 @@ project(OpenGLExp)
 
 set(CMAKE_C_STANDARD 99)
 
-set(SOURCE_FILES main.c jitter.h accanti.c triangle.c all.h grid.c triangle.cpp gol.c exp.c teapot.c)
+set(SOURCE_FILES main.c jitter.h accanti.c triangle.c all.h grid.c triangle.cpp gol.c exp.c teapot.c cyril.c)
 add_executable(OpenGLExp ${SOURCE_FILES})
 
 find_package(OpenGL REQUIRED)

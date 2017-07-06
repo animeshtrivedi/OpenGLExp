@@ -74,7 +74,7 @@ static void display()
     /* drawing commands would go here, if we had any yet... */
     //drawgrid();
 
-#ifdef EX1
+#if 1
     glColor3f(0.0f, 0.0f, 0.0f);
     glRectf(-0.75f,0.75f, 0.75f, -0.75f);
 
@@ -95,7 +95,6 @@ static void display()
 //    FGAPI void    FGAPIENTRY glutLeaveGameMode( void );
 //    FGAPI int     FGAPIENTRY glutGameModeGet( GLenum query );
 
-    glutSolidTeapot(0.5f);
     glFlush();
     glutSwapBuffers();
 }

@@ -19,6 +19,7 @@ int main(int argc, char **argv) {
     //accanti_main(argc, argv);
     //grid_main(argc, argv);
     //exp_main(argc, argv);
-    teapot_main(argc, argv);
+    //teapot_main(argc, argv);
+    cyril_main(argc, argv);
     return 0;
 }
