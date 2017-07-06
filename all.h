@@ -11,5 +11,6 @@ extern int grid_main(int argc, char** argv);
 extern int exp_main(int argc, char** argv);
 extern int teapot_main(int argc, char** argv);
 extern int cyril_main(int argc, char** argv);
+extern int xbox_main(int argc, char** argv);
 
 #endif //OPENGLEXP_ALL_H

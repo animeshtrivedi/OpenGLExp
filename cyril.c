@@ -44,7 +44,7 @@ double bottom_left_y = -1.0;
 double top_right_x = 1.0;
 double top_right_y = 1.0;
 
-#define SIZEX 0.3
+#define SIZEX 0.1
 
 /* we start by 0.2 normalized square */
 double sizeN = SIZEX;
