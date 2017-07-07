@@ -23,9 +23,9 @@ int main(int argc, char **argv) {
     //cyril_main(argc, argv);
     //xbox_main(argc, argv);
 
-    //together_main(argc, argv);
+    together_main(argc, argv);
 
     // Works !
-    dualwindow2_main(argc, argv);
+    //dualwindow2_main(argc, argv);
     return 0;
 }

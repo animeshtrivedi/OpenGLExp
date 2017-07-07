@@ -50,6 +50,7 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 
+int window_xbox, window_gol;
 
 long global_time = 0;
 struct square {
@@ -300,6 +301,7 @@ int run_scan(){
 
 static void init (void)
 {
+    glutSetWindow(window_gol);
     calculate_rectangles_num();
     glClearColor (1.0, 1.0, 1.0, 0.0);
     glClear(GL_COLOR_BUFFER_BIT);
@@ -307,6 +309,7 @@ static void init (void)
 
 static void display()
 {
+    glutSetWindow(window_gol);
     glClearColor (1.0, 1.0, 1.0, 0.0);
     glClear(GL_COLOR_BUFFER_BIT);
     walk_and_draw_rectangles();
@@ -315,6 +318,7 @@ static void display()
 
 static void timer_redraw(int value){
     printf(" Execution for generation %ld \n", global_time);
+    glutSetWindow(window_gol);
     run_scan();
     glutPostRedisplay();
     // 1000 milliseconds
@@ -360,6 +364,7 @@ int got_depth = 0;
 void DrawGLScene()
 {
     pthread_mutex_lock(&gl_backbuf_mutex);
+    glutSetWindow(window_xbox);
 
     // When using YUV_RGB mode, RGB frames only arrive at 15Hz, so we shouldn't force them to draw in lock-step.
     // However, this is CPU/GPU intensive when we are receiving frames in lockstep.
@@ -454,6 +459,7 @@ void DrawGLScene()
 
 void keyPressed(unsigned char key, int x, int y)
 {
+    glutSetWindow(window_xbox);
     if (key == 27) {
         die = 1;
         pthread_join(freenect_thread, NULL);
@@ -569,6 +575,7 @@ void keyPressed(unsigned char key, int x, int y)
 
 void ReSizeGLScene(int Width, int Height)
 {
+    glutSetWindow(window_xbox);
     glViewport(0,0,Width,Height);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
@@ -614,7 +621,7 @@ void *gl_threadfunc(void *arg)
     glutInitWindowSize(1280, 480);
     glutInitWindowPosition(0, 0);
 
-    window = glutCreateWindow("LibFreenect");
+    window = window_xbox = glutCreateWindow("LibFreenect");
 
     glutDisplayFunc(&DrawGLScene);
     glutIdleFunc(&DrawGLScene);
@@ -625,7 +632,7 @@ void *gl_threadfunc(void *arg)
 
     /* we can put next screen here */
     //glutInitDisplayMode (GLUT_DOUBLE | GLUT_RGBA);
-    glutCreateWindow ("Life Grid Example");
+    window_gol = glutCreateWindow ("Life Grid Example");
     init();
     glutDisplayFunc(&display);
     glutTimerFunc(1000, timer_redraw, 0);
