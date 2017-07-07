@@ -25,7 +25,7 @@ int main(int argc, char **argv) {
 
     //together_main(argc, argv);
 
-    // does not work yet
+    // Works !
     dualwindow2_main(argc, argv);
     return 0;
 }

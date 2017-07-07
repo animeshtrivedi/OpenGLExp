@@ -7,6 +7,7 @@
 
 float clr1 = 0.2;
 float clr2 = 0.6;
+int win2, win1;
 
 static void displayX1()
 {
@@ -56,6 +57,7 @@ static void displayX2()
 
 static void timer_redraw1(int value){
     printf(" Execution1111 for 1000s \n");
+    glutSetWindow(win1);
     // do something
     glutPostRedisplay();
     // 1000 milliseconds
@@ -64,6 +66,7 @@ static void timer_redraw1(int value){
 
 static void timer_redraw2(int value){
     printf(" Execution5555 for 500ms \n");
+    glutSetWindow(win2);
     // do something
     glutPostRedisplay();
     // 1000 milliseconds
@@ -75,11 +78,13 @@ int dualwindow2_main(int argc, char *argv[])
 {
     glutInit(&argc, argv);      // Initialize GLUT
 
-    glutCreateWindow("win1");   // Create a window 1
+    win1 = glutCreateWindow("win1");   // Create a window 1
+    glutSetWindow(win1);
     glutDisplayFunc(displayX1);   // Register display callback
     glutTimerFunc(1000, timer_redraw1, 0);
 
-    glutCreateWindow("win2");   // Create a window 2
+    win2 = glutCreateWindow("win2");   // Create a window 2
+    glutSetWindow(win2);
     glutDisplayFunc(displayX2);   // Register display callback
     glutTimerFunc(500, timer_redraw2, 0);
 
