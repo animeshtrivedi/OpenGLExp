@@ -50,7 +50,13 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 
-int window_xbox, window_gol;
+int window_xbox, window_gol1;
+
+// back: owned by libfreenect (implicit for depth)
+// mid: owned by callbacks, "latest frame ready"
+// front: owned by GL, "currently being drawn"
+uint8_t *depth_mid, *depth_front;
+uint8_t *rgb_back, *rgb_mid, *rgb_front;
 
 long global_time = 0;
 struct square {
@@ -66,21 +72,27 @@ struct square {
     int isAlive;
 };
 
-int init_state[] = {7, 12, 17};
+// works!
+//int init_state[] = {7, 12, 17};
+#define SIZEX 0.05
+
+// works!
+int init_state[] = {13,14,15,20,21,22};
+//#define SIZEX 0.1
+
+// does not work
 //int init_state[] = {9,10,15,16,19,20,25,26};
-//int init_state[] = {13,14,15,20,21,22};
+//#define SIZEX 0.3
 
 /* current height and width of the window : initial 1024 x 768 */
-int curr_height = 1024;
-int curr_width = 768;
+//int curr_height = 1024;
+//int curr_width = 768;
 
-double bottom_left_x = -1.0;
-double bottom_left_y = -1.0;
+static double bottom_left_x = -1.0;
+static double bottom_left_y = -1.0;
 
-double top_right_x = 1.0;
-double top_right_y = 1.0;
-
-#define SIZEX 0.4
+static double top_right_x = 1.0;
+static double top_right_y = 1.0;
 
 /* we start by 0.2 normalized square */
 double sizeN = SIZEX;
@@ -114,7 +126,7 @@ int init_alive(int index){
 /* calculates number of rectangles while keeping the number of
  * squares fixed. Hence when you resize, each squares gets
  * bigger or smaller */
-int calculate_rectangles_num(){
+int init_calculate_rectangles_num(){
 
     double xrange = top_right_x - bottom_left_x;
     double yrange = top_right_y - bottom_left_y;
@@ -154,6 +166,22 @@ int calculate_rectangles_num(){
     return 0;
 }
 
+
+/* set colors on squares */
+void set_black(struct square *s){
+    s->r = s->g = s->b= 0.0;
+}
+
+void set_white(struct square *s){
+    s->r = s->g = s->b= 0.8;
+}
+
+void set_color(struct square *s, double r, double g, double b){
+    s->r = r;
+    s->g = g;
+    s->b = b;
+}
+
 int walk_and_draw_rectangles(){
 
     struct square *s = SX;
@@ -174,11 +202,15 @@ int walk_and_draw_rectangles(){
 		*/
 
 #else
+#ifdef GOL
         if(s->isAlive){
-            glColor3f(0.2f, 0.2f, 0.2f);
+            glColor3f(0.5f, 0.0f, 0.0f);
         } else {
             glColor3f(0.9f,0.9f,0.9f);
         }
+#endif
+        glColor3f(s->r, s->g, s->b);
+
         glRectf(x1, y1, x2, y2);
 #endif
         /* move to the next square */
@@ -186,14 +218,6 @@ int walk_and_draw_rectangles(){
     }
 }
 
-/* set colors on squares */
-void set_black(struct square *s){
-    s->r = s->g = s->b= 0.0;
-}
-
-void set_white(struct square *s){
-    s->r = s->g = s->b= 0.8;
-}
 
 int coordinates_to_arrindex(double x, double y){
     int indexX = (x - bottom_left_x) / sizeN;
@@ -236,6 +260,60 @@ int next_neighbour_index(struct square *s, int k){
         case 7: return calculate_from_cordinate(s->x         , s->y + sizeN);
         case 8: return calculate_from_cordinate(s->x + sizeN , s->y + sizeN);
     }
+}
+
+int calculate_avg_color(struct square *s, int index) {
+	/* s is the entry in the global array */
+	/* we need to find x and y ranges in 640 x 480 */
+
+	double maxXRange = top_right_x - bottom_left_x;
+	double maxYRange = top_right_y - bottom_left_y;
+
+	double xMultiplier = 640 / maxXRange;
+	double yMultiplier = 480 / maxYRange;
+
+	int x_start = (s->x - bottom_left_x) * xMultiplier;
+	int x_end = (s->x + s->s - bottom_left_x) * xMultiplier;
+
+	int y_start = (s->y - bottom_left_y) * yMultiplier;
+	int y_end = (s->y + s->s - bottom_left_y) * yMultiplier;
+
+	assert(x_start >= 0 && x_start <= 640);
+	assert(x_end >= 0 && x_end <= 640);
+
+	assert(y_start >= 0 && y_start <= 480);
+	assert(y_end >= 0 && y_end <= 480);
+
+	double rAvg = 0 , gAvg = 0 , bAvg = 0;
+
+	int ylimit = y_end - y_start;
+	int xlimit = x_end - y_end;
+	int items = 640 * 480;
+	for(int i = x_start; i <= x_end; i++){
+		for(int j = y_start; j <= y_end; j++){
+			// Flat[x + WIDTH * (y + DEPTH * z)] = Original[x, y, z]
+			// https://stackoverflow.com/questions/7367770/how-to-flatten-or-index-3d-array-in-1d-array
+#if 1
+			// most likely - it is this encoding
+	          int index = (i * 640 * 3) + (j * 3);
+	          rAvg+=rgb_front[index + 0];
+	          gAvg+=rgb_front[index + 1];
+	          bAvg+=rgb_front[index + 2];
+#else
+	          /* or alternatively */
+	          rAvg+=rgb_front[i * 640 + j];
+	          gAvg+=rgb_front[(items) + i * 640 + j];
+	          bAvg+=rgb_front[(items * 2) + i * 640 + j];
+#endif
+		}
+	}
+	// if the value is byte then to normalize it we must divide by 255
+	double xxx = ((x_end - x_start) * (y_end - y_start) * 255);
+	rAvg/=xxx;
+	gAvg/=xxx;
+	bAvg/=xxx;
+	printf(" Setting average color to (index: %d) : %f %f %f \n", index, rAvg, gAvg, bAvg);
+	set_color(s, rAvg, gAvg, bAvg);
 }
 
 int calculate_next_generation(struct square *s, int index)
@@ -290,7 +368,11 @@ int run_scan(){
 
     /* calculate next generation status */
     for(int i =0; i < sq_total; i++){
+#ifdef GOL
         calculate_next_generation(SX + i, i);
+#else
+    	calculate_avg_color(SX + i, i);
+#endif
     }
     /* apply next generation */
     for(int i =0; i < sq_total; i++){
@@ -301,29 +383,29 @@ int run_scan(){
 
 static void init (void)
 {
-    glutSetWindow(window_gol);
-    calculate_rectangles_num();
+    //glutSetWindow(window_gol);
+    init_calculate_rectangles_num();
     glClearColor (1.0, 1.0, 1.0, 0.0);
     glClear(GL_COLOR_BUFFER_BIT);
 }
 
 static void display()
 {
-    glutSetWindow(window_gol);
+    glutSetWindow(window_gol1);
     glClearColor (1.0, 1.0, 1.0, 0.0);
     glClear(GL_COLOR_BUFFER_BIT);
     walk_and_draw_rectangles();
     glutSwapBuffers();
 }
 
-static void timer_redraw(int value){
+static void timer_redraw_1(int value){
     printf(" Execution for generation %ld \n", global_time);
-    glutSetWindow(window_gol);
+    glutSetWindow(window_gol1);
     run_scan();
     glutPostRedisplay();
     // 1000 milliseconds
     global_time++;
-    glutTimerFunc(1000, timer_redraw, 0);
+    glutTimerFunc(1000, timer_redraw_1, 0);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -337,11 +419,6 @@ int window;
 
 pthread_mutex_t gl_backbuf_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-// back: owned by libfreenect (implicit for depth)
-// mid: owned by callbacks, "latest frame ready"
-// front: owned by GL, "currently being drawn"
-uint8_t *depth_mid, *depth_front;
-uint8_t *rgb_back, *rgb_mid, *rgb_front;
 
 GLuint gl_depth_tex;
 GLuint gl_rgb_tex;
@@ -436,10 +513,12 @@ void DrawGLScene()
     glPopMatrix();
 
     glBindTexture(GL_TEXTURE_2D, gl_rgb_tex);
-    if (current_format == FREENECT_VIDEO_RGB || current_format == FREENECT_VIDEO_YUV_RGB)
+    if (current_format == FREENECT_VIDEO_RGB || current_format == FREENECT_VIDEO_YUV_RGB) {
         glTexImage2D(GL_TEXTURE_2D, 0, 3, 640, 480, 0, GL_RGB, GL_UNSIGNED_BYTE, rgb_front);
-    else
-        glTexImage2D(GL_TEXTURE_2D, 0, 1, 640, 480, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, rgb_front+640*4);
+    } else {
+        // atr: this is not used
+        glTexImage2D(GL_TEXTURE_2D, 0, 1, 640, 480, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, rgb_front + 640 * 4);
+    }
 
     glPushMatrix();
     glTranslatef(640+(640.0/2.0),(480.0/2.0) ,0.0);
@@ -632,10 +711,10 @@ void *gl_threadfunc(void *arg)
 
     /* we can put next screen here */
     //glutInitDisplayMode (GLUT_DOUBLE | GLUT_RGBA);
-    window_gol = glutCreateWindow ("Life Grid Example");
+    window_gol1 = glutCreateWindow ("Welcome to the Life !");
     init();
     glutDisplayFunc(&display);
-    glutTimerFunc(1000, timer_redraw, 0);
+    glutTimerFunc(1000, timer_redraw_1, 0);
 
     glutMainLoop();
 
@@ -824,4 +903,3 @@ int together_main(int argc, char **argv)
 
     return 0;
 }
-

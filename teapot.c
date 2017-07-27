@@ -13,7 +13,8 @@ static void display () {
     glClear(GL_COLOR_BUFFER_BIT);
 
     /* draw scene */
-    glutSolidTeapot(.5);
+    //glutSolidTeapot(.5);
+    glutWireTeapot(.5);
 
     /* flush drawing routines to the window */
     glFlush();
