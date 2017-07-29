@@ -142,8 +142,7 @@ int init_calculate_rectangles_num(){
     }
     SX = (struct square *) calloc(sizeof(struct square), sq_total);
     next_generation_status = calloc(sizeof(int), sq_total);
-
-    /* we start from bottom left size */
+    /* we start from bottom left side */
     double curr_x = bottom_left_x;
     double curr_y = bottom_left_y;
 
@@ -294,13 +293,18 @@ int calculate_avg_color(struct square *s, int index) {
 			// Flat[x + WIDTH * (y + DEPTH * z)] = Original[x, y, z]
 			// https://stackoverflow.com/questions/7367770/how-to-flatten-or-index-3d-array-in-1d-array
 #if 1
-			// most likely - it is this encoding
-	          int index = (i * 640 * 3) + (j * 3);
-	          rAvg+=rgb_front[index + 0];
-	          gAvg+=rgb_front[index + 1];
-	          bAvg+=rgb_front[index + 2];
+			/* most likely - it is this encoding RGB,RGB,RGB,RGB...
+			 * somehow this is flipped - I,i) indexes are accessed like this.
+			 * This 480 -j come from the fact that OpenGL rectangle
+			 * calculations starts at the bottom left, whereas RGB color data
+			 * starts at top left. Hence (480 -j)
+			 */
+	        int index = ((480 - j) * 640 * 3) + (i * 3);
+	        rAvg+=rgb_front[index + 0];
+	        gAvg+=rgb_front[index + 1];
+	        bAvg+=rgb_front[index + 2];
 #else
-	          /* or alternatively */
+	          /* or alternatively : RRRR...GGG...BBB*/
 	          rAvg+=rgb_front[i * 640 + j];
 	          gAvg+=rgb_front[(items) + i * 640 + j];
 	          bAvg+=rgb_front[(items * 2) + i * 640 + j];
@@ -405,7 +409,7 @@ static void timer_redraw_1(int value){
     glutPostRedisplay();
     // 1000 milliseconds
     global_time++;
-    glutTimerFunc(100, timer_redraw_1, 0);
+    glutTimerFunc(1000, timer_redraw_1, 0);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
