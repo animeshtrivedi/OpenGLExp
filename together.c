@@ -72,17 +72,17 @@ struct square {
     int isAlive;
 };
 
-// works!
+// works first example!
 //int init_state[] = {7, 12, 17};
-#define SIZEX 0.05
+//#define SIZEX 0.4
 
-// works!
-int init_state[] = {13,14,15,20,21,22};
-//#define SIZEX 0.1
-
-// does not work
-//int init_state[] = {9,10,15,16,19,20,25,26};
+// works! -- second example
+//int init_state[] = {13,14,15,20,21,22};
 //#define SIZEX 0.3
+
+// example 3 - works
+int init_state[] = {9,10,15,16,19,20,25,26};
+#define SIZEX 0.3
 
 /* current height and width of the window : initial 1024 x 768 */
 //int curr_height = 1024;
@@ -201,14 +201,15 @@ int walk_and_draw_rectangles(){
 		*/
 
 #else
-#ifdef GOL
+#if 1
         if(s->isAlive){
             glColor3f(0.5f, 0.0f, 0.0f);
         } else {
             glColor3f(0.9f,0.9f,0.9f);
         }
-#endif
+#else
         glColor3f(s->r, s->g, s->b);
+#endif
 
         glRectf(x1, y1, x2, y2);
 #endif
@@ -356,7 +357,7 @@ int calculate_next_generation(struct square *s, int index)
         }
     } else {
         /* we were dead */
-        if(total_alive >= 3){
+        if(total_alive == 3){
             next_generation_status[index] = 1; // re-surrected
             //printf(" result: alive (resurrected) \n");
         } else {
@@ -372,7 +373,7 @@ int run_scan(){
 
     /* calculate next generation status */
     for(int i =0; i < sq_total; i++){
-#ifdef GOL
+#if 1
         calculate_next_generation(SX + i, i);
 #else
     	calculate_avg_from_xboxdata(SX + i, i, depth_front);
