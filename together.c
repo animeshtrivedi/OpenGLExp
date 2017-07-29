@@ -261,7 +261,7 @@ int next_neighbour_index(struct square *s, int k){
     }
 }
 
-int calculate_avg_color(struct square *s, int index) {
+int calculate_avg_from_xboxdata(struct square *s, int index, uint8_t *data) {
 	/* s is the entry in the global array */
 	/* we need to find x and y ranges in 640 x 480 */
 
@@ -300,14 +300,14 @@ int calculate_avg_color(struct square *s, int index) {
 			 * starts at top left. Hence (480 -j)
 			 */
 	        int index = ((480 - j) * 640 * 3) + (i * 3);
-	        rAvg+=rgb_front[index + 0];
-	        gAvg+=rgb_front[index + 1];
-	        bAvg+=rgb_front[index + 2];
+	        rAvg+=data[index + 0];
+	        gAvg+=data[index + 1];
+	        bAvg+=data[index + 2];
 #else
 	          /* or alternatively : RRRR...GGG...BBB*/
-	          rAvg+=rgb_front[i * 640 + j];
-	          gAvg+=rgb_front[(items) + i * 640 + j];
-	          bAvg+=rgb_front[(items * 2) + i * 640 + j];
+	          rAvg+=data[i * 640 + j];
+	          gAvg+=data[(items) + i * 640 + j];
+	          bAvg+=data[(items * 2) + i * 640 + j];
 #endif
 		}
 	}
@@ -375,7 +375,8 @@ int run_scan(){
 #ifdef GOL
         calculate_next_generation(SX + i, i);
 #else
-    	calculate_avg_color(SX + i, i);
+    	calculate_avg_from_xboxdata(SX + i, i, depth_front);
+    	//calculate_avg_from_xboxdata(SX + i, i, rgb_front);
 #endif
     }
     /* apply next generation */
@@ -716,8 +717,9 @@ void *gl_threadfunc(void *arg)
     /* we can put next screen here */
     //glutInitDisplayMode (GLUT_DOUBLE | GLUT_RGBA);
     glutInitWindowSize(640, 480);
-    glutInitWindowPosition(0, 500);
+    glutInitWindowPosition(0, 550);
     window_gol1 = glutCreateWindow ("Welcome to the Life !");
+    glutKeyboardFunc(&keyPressed);
     init();
     glutDisplayFunc(&display);
     glutTimerFunc(1000, timer_redraw_1, 0);
