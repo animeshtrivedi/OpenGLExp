@@ -405,7 +405,7 @@ static void timer_redraw_1(int value){
     glutPostRedisplay();
     // 1000 milliseconds
     global_time++;
-    glutTimerFunc(1000, timer_redraw_1, 0);
+    glutTimerFunc(100, timer_redraw_1, 0);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -711,6 +711,8 @@ void *gl_threadfunc(void *arg)
 
     /* we can put next screen here */
     //glutInitDisplayMode (GLUT_DOUBLE | GLUT_RGBA);
+    glutInitWindowSize(640, 480);
+    glutInitWindowPosition(0, 500);
     window_gol1 = glutCreateWindow ("Welcome to the Life !");
     init();
     glutDisplayFunc(&display);
