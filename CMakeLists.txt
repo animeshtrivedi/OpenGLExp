@@ -3,7 +3,9 @@ project(OpenGLExp)
 
 set(CMAKE_C_STANDARD 99)
 
-set(SOURCE_FILES main.c jitter.h accanti.c triangle.c all.h grid.c triangle.cpp gol.c exp.c teapot.c cyril.c xbox.c together.c dualwindow.c dualwindow2.c)
+#set(SOURCE_FILES main.c jitter.h accanti.c triangle.c all.h grid.c triangle.cpp gol.c exp.c teapot.c cyril.c xbox.c together.c dualwindow.c dualwindow2.c)
+
+set(SOURCE_FILES main2.c ./digital_impressions/util.c ./digital_impressions/xbox.c ./digital_impressions/impressions.c)
 add_executable(OpenGLExp ${SOURCE_FILES})
 
 find_package(OpenGL REQUIRED)
@@ -15,4 +17,4 @@ find_package(libfreenect REQUIRED)
 
 include_directories( ${OPENGL_INCLUDE_DIRS}  ${GLUT_INCLUDE_DIRS} ${SDL2_INCLUDE_DIRS} ${GLEW_INCLUDE_DIRS} ${FREENECT_INCLUDE_DIRS} ${THREADS_PTHREADS_INCLUDE_DIR})
 
-target_link_libraries(OpenGLExp ${OPENGL_LIBRARIES} ${GLUT_LIBRARY} ${SDL2_LIBRARY} ${GLEW_LIBRARIES} ${FREENECT_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(OpenGLExp m ${OPENGL_LIBRARIES} ${GLUT_LIBRARY} ${SDL2_LIBRARY} ${GLEW_LIBRARIES} ${FREENECT_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})

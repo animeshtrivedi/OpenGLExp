@@ -1,11 +1,6 @@
 //
 // Created by atr on 06.07.17.
 //
-
-//
-// Created by atr on 06.07.17.
-//
-
 /*
  * This file is part of the OpenKinect Project. http://www.openkinect.org
  *
@@ -31,7 +26,7 @@
  * Binary distributions must follow the binary distribution requirements of
  * either License.
  */
-
+#if 0
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -58,8 +53,10 @@ int window_xbox, window_gol1;
 uint8_t *depth_mid, *depth_front;
 uint8_t *rgb_back, *rgb_mid, *rgb_front;
 
-long global_time = 0;
-struct square {
+//#define GOL
+
+static long global_time = 0;
+static struct squareX {
     /* x,y are lower left co-ordinates and then size s units */
     double x;
     double y;
@@ -81,8 +78,48 @@ struct square {
 //#define SIZEX 0.3
 
 // example 3 - works
-int init_state[] = {9,10,15,16,19,20,25,26};
-#define SIZEX 0.3
+static int init_state[] = {9,10,15,16,19,20,25,26};
+//#define SIZEX 0.3
+/*
+ *
+ *  R G B : 0.01
+ *  R B G : 0.02
+ *
+ *  G R B : 0.04
+ *  G B R : 0.05
+ *
+ *  B R G : 0.07
+ *  B G R : 0.1
+ */
+
+
+static double SIZEXS[] = {0.1,0.07,0.05,0.04,0.02,0.01};
+
+static double SIZEX = 0.1;
+static int ix = 1;
+
+static double getNext() {
+	if(ix == 1) {
+		ix*=10;
+		return 0.001;
+	}
+	if(ix == 10){
+		ix*=10;
+		return 0.01;
+	}
+	if(ix == 100){
+		ix*=100;
+		return 0.1;
+	}
+	if(ix == 1000){
+		ix*=100;
+		return 0.4;
+	}
+	if(ix == 10000){
+		ix=1;
+		return 0.001;
+	}
+}
 
 /* current height and width of the window : initial 1024 x 768 */
 //int curr_height = 1024;
@@ -94,27 +131,27 @@ static double bottom_left_y = -1.0;
 static double top_right_x = 1.0;
 static double top_right_y = 1.0;
 
+static int gol_timeout = 1000; // this is in msec
+#if 0
+static int blue_sq = 0, red_sq = 0, green_sq = 0;
+#endif
+
 /* we start by 0.2 normalized square */
-double sizeN = SIZEX;
-double niceSlack = SIZEX/(10 * 2); // 10% of that
+static double sizeN = 0.5; //SIZEX;
+//static double sizeN = -1;
+static double niceSlack = 0; //SIZEX/(10 * 2); // 10% of that
 
-struct square *SX = NULL;
+struct squareX *SX = NULL;
 /* total number of squares */
-int sq_total = 0;
+static int sq_total = 0;
 /* total number on the x axis */
-int sq_count_x = 0;
+static int sq_count_x = 0;
 /* total number on the y axis */
-int sq_count_y = 0;
+static int sq_count_y = 0;
 
-int *next_generation_status;
-/* calculates number of squares while keeping the area of the
- * square fixed. Hence when you resize, you will get more
- * squares. */
-int calculate_rectangles_area() {
-    return 0;
-}
+static int *next_generation_status;
 
-int init_alive(int index){
+static int init_alive(int index){
     int entries = sizeof(init_state) / sizeof(int);
     for(int i = 0 ; i < entries; i++){
         if (init_state[i] == index)
@@ -123,10 +160,41 @@ int init_alive(int index){
     return 0;
 }
 
+static void glPrintText(double x, double y, double z, char *string)
+{
+	glColor3f(0, 0, 0);
+	glRasterPos2f(x, y);
+	int len = (int) strlen(string);
+	for (int i = 0; i < len; i++)
+	{
+		glutBitmapCharacter(GLUT_BITMAP_HELVETICA_12, string[i]);
+	}
+}
+
+static void glPrintSquare(struct squareX *s)
+{
+	char *newx = calloc(1024, 1);
+	char *X;
+	if(s->r > s->g){
+		if(s->r > s->b)
+			X="RED";
+		else
+			X="BLUE";
+	} else {
+		if(s->g > s->b)
+			X="GREEN";
+		else
+			X="BLUE";
+	}
+
+	snprintf(newx, 32, "(%0.2f, %0.2f, %0.2f) %s", s->r, s->g, s->b, X);
+	glPrintText(s->x, s->y, 0, newx);
+}
+
 /* calculates number of rectangles while keeping the number of
  * squares fixed. Hence when you resize, each squares gets
  * bigger or smaller */
-int init_calculate_rectangles_num(){
+static int init_calculate_rectangles_num(){
 
     double xrange = top_right_x - bottom_left_x;
     double yrange = top_right_y - bottom_left_y;
@@ -134,13 +202,14 @@ int init_calculate_rectangles_num(){
     sq_count_x = xrange / sizeN;
     sq_count_y = yrange / sizeN;
     sq_total = sq_count_x * sq_count_y;
-    printf("Number of fixed area squares are: %d \n", sq_total);
+    printf("Number of fixed area squares are: %d  | xrange: %f yrange: %f sizeN: %f \n",
+    		sq_total, xrange, yrange, sizeN);
     /* we allocate them */
     if(SX){
         /* if it was not null then that means it is a recalculation */
         free(SX);
     }
-    SX = (struct square *) calloc(sizeof(struct square), sq_total);
+    SX = (struct squareX *) calloc(sizeof(struct squareX), sq_total);
     next_generation_status = calloc(sizeof(int), sq_total);
     /* we start from bottom left side */
     double curr_x = bottom_left_x;
@@ -148,13 +217,13 @@ int init_calculate_rectangles_num(){
 
     for(int i = 0; i < sq_count_y; i++){
         for (int j = 0; j < sq_count_x; j++){
-            struct square *xx = &SX[(i * sq_count_x) + j];
+            struct squareX *xx = &SX[(i * sq_count_x) + j];
             xx->x = curr_x;
             xx->y = curr_y;
             xx->s = sizeN;
             xx->index = (i * sq_count_x) + j;
             xx->isAlive = init_alive(xx->index);
-            printf(" Square number : %d , coordinates (%f, %f) \n", xx->index, xx->x, xx->y);
+            //printf(" Square number : %d , coordinates (%f, %f) \n", xx->index, xx->x, xx->y);
             curr_x+=sizeN;
         }
         /* move y one up */
@@ -167,23 +236,23 @@ int init_calculate_rectangles_num(){
 
 
 /* set colors on squares */
-void set_black(struct square *s){
+static void set_black(struct squareX *s){
     s->r = s->g = s->b= 0.0;
 }
 
-void set_white(struct square *s){
+static void set_white(struct squareX *s){
     s->r = s->g = s->b= 0.8;
 }
 
-void set_color(struct square *s, double r, double g, double b){
+static void set_color(struct squareX *s, double r, double g, double b){
     s->r = r;
     s->g = g;
     s->b = b;
 }
 
-int walk_and_draw_rectangles(){
+static int walk_and_draw_rectangles(){
 
-    struct square *s = SX;
+    struct squareX *s = SX;
     double x1, y1, x2, y2;
     for (int i = 0; i < sq_total; i++){
         x1 = s->x + niceSlack;
@@ -201,7 +270,7 @@ int walk_and_draw_rectangles(){
 		*/
 
 #else
-#if 1
+#ifdef GOL
         if(s->isAlive){
             glColor3f(0.5f, 0.0f, 0.0f);
         } else {
@@ -212,6 +281,7 @@ int walk_and_draw_rectangles(){
 #endif
 
         glRectf(x1, y1, x2, y2);
+        //glPrintSquare(s);
 #endif
         /* move to the next square */
         s++;
@@ -219,13 +289,13 @@ int walk_and_draw_rectangles(){
 }
 
 
-int coordinates_to_arrindex(double x, double y){
+static int coordinates_to_arrindex(double x, double y){
     int indexX = (x - bottom_left_x) / sizeN;
     int indexY = (y - bottom_left_y) / sizeN;
     return ((indexY * sq_count_x) + indexX);
 }
 
-int is_outside(double x, double y){
+static int is_outside(double x, double y){
     /* if you are drawing below , at the limit is fine */
     /* make sure that bottom left is inside the draw */
     int bottom_left = (x >= bottom_left_x) && (y >= bottom_left_y);
@@ -234,7 +304,7 @@ int is_outside(double x, double y){
     return !(bottom_left && top_right);
 }
 
-int calculate_from_cordinate(double x, double y){
+static int calculate_from_cordinate(double x, double y){
     if(is_outside(x,y)){
         //printf("\t declaring %f %f outside \n", x, y);
         return -1;
@@ -246,7 +316,7 @@ int calculate_from_cordinate(double x, double y){
 }
 
 /* we calculate from the bottom left to top right neighbours */
-int next_neighbour_index(struct square *s, int k){
+static int next_neighbour_index(struct squareX *s, int k){
     switch (k) {
         case 0: return calculate_from_cordinate(s->x - sizeN , s->y - sizeN);
         case 1: return calculate_from_cordinate(s->x         , s->y - sizeN);
@@ -262,7 +332,7 @@ int next_neighbour_index(struct square *s, int k){
     }
 }
 
-int calculate_avg_from_xboxdata(struct square *s, int index, uint8_t *data) {
+static int calculate_avg_from_xboxdata(struct squareX *s, int index, uint8_t *data) {
 	/* s is the entry in the global array */
 	/* we need to find x and y ranges in 640 x 480 */
 
@@ -317,11 +387,48 @@ int calculate_avg_from_xboxdata(struct square *s, int index, uint8_t *data) {
 	rAvg/=xxx;
 	gAvg/=xxx;
 	bAvg/=xxx;
-	printf(" Setting average color to (index: %d) : %f %f %f \n", index, rAvg, gAvg, bAvg);
+	//printf(" Setting average color to (index: %d) : %f %f %f \n", index, rAvg, gAvg, bAvg);
+#if 0
+	if(rAvg > gAvg){
+		if( rAvg > bAvg){
+			red_sq++;
+		} else {
+			blue_sq++;
+		}
+	} else {
+		if( gAvg > bAvg){
+			green_sq++;
+		} else {
+			blue_sq++;
+		}
+	}
+#endif
+
 	set_color(s, rAvg, gAvg, bAvg);
 }
 
-int calculate_next_generation(struct square *s, int index)
+int calculate_next_timeout(){
+    double r=0, g=0, b=0;
+	for(int i = 0; i < 480; i++){
+		for(int j = 0; j < 640; j++){
+			//Flat[x + WIDTH * (y + DEPTH * z)] = Original[x, y, z]
+			// Original[HEIGHT, WIDTH, DEPTH] then
+			//         [480, 640, 3]
+			int index = ((i*3) * 640 + (j*3));
+			r+=rgb_front[index];
+			g+=rgb_front[index + 1];
+			b+=rgb_front[index + 2];
+		}
+	}
+	int items = 640 * 480;
+	r/=items;
+	g/=items;
+	b/=items;
+	printf("\n GLOBAL avergae is %f %f %f \n", r/255, g/255, b/255);
+	return (1000 * (r + g + b) / (3 * 255));
+}
+
+int calculate_next_generation(struct squareX *s, int index)
 {
     int neix[9], total_alive = 0, total_dead = 0, stx;
     for(int i= 0 ; i < 9; i++){
@@ -370,16 +477,30 @@ int calculate_next_generation(struct square *s, int index)
 int run_scan(){
     /* clean next generation */
     bzero(next_generation_status, sizeof(int) * sq_total);
+    //red_sq = blue_sq = green_sq = 0;
 
     /* calculate next generation status */
     for(int i =0; i < sq_total; i++){
-#if 1
+#ifdef GOL
         calculate_next_generation(SX + i, i);
 #else
     	calculate_avg_from_xboxdata(SX + i, i, depth_front);
     	//calculate_avg_from_xboxdata(SX + i, i, rgb_front);
 #endif
     }
+#if 0
+    if( blue_sq > green_sq) {
+    	if( blue_sq > red_sq)
+    		gol_timeout = 1000;
+    	else
+    		gol_timeout = 10;
+    } else {
+    	if(green_sq > red_sq)
+    		gol_timeout = 100;
+    	else
+    		gol_timeout = 10;
+    }
+#endif
     /* apply next generation */
     for(int i =0; i < sq_total; i++){
         SX[i].isAlive = next_generation_status[i];
@@ -389,6 +510,15 @@ int run_scan(){
 
 static void init (void)
 {
+	SIZEX = 0.1;
+	bottom_left_x = -1.0;
+	bottom_left_y = -1.0;
+	top_right_x = 1.0;
+	top_right_y = 1.0;
+	gol_timeout = 1000; // this is in msec
+	sizeN = SIZEX;
+	niceSlack = 0;
+
     //glutSetWindow(window_gol);
     init_calculate_rectangles_num();
     glClearColor (1.0, 1.0, 1.0, 0.0);
@@ -405,12 +535,15 @@ static void display()
 }
 
 static void timer_redraw_1(int value){
-    printf(" Execution for generation %ld \n", global_time);
     glutSetWindow(window_gol1);
+    //sizeN = SIZEX = getNext();
+    init_calculate_rectangles_num();
     run_scan();
     glutPostRedisplay();
     // 1000 milliseconds
     global_time++;
+    gol_timeout = calculate_next_timeout();
+    //printf(" Execution for generation %ld || next timeout is set for %d \n", global_time, gol_timeout);
     glutTimerFunc(1000, timer_redraw_1, 0);
 }
 
@@ -912,3 +1045,5 @@ int together_main(int argc, char **argv)
 
     return 0;
 }
+
+#endif
