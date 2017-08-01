@@ -76,6 +76,7 @@ struct global_win1{
 	int height;
 	int window_number;
 	char *name;
+	int timeout;
 };
 
 extern void init_window_state(struct window_state *state,
