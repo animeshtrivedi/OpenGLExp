@@ -18,8 +18,8 @@
 
 static pthread_mutex_t gl_backbuf_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-static uint8_t *depth_mid, *depth_front;
-static uint8_t *rgb_back, *rgb_mid, *rgb_front;
+uint8_t *depth_mid, *depth_front;
+uint8_t *rgb_back, *rgb_mid, *rgb_front;
 static uint16_t t_gamma[2048];
 
 static pthread_t freenect_thread;

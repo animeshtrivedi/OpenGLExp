@@ -11,12 +11,11 @@ static struct global_win1 *windows;
 //#define SIZEX 0.3
 
 /////////////////////////////////////////////////
-static void _timer_gol(struct global_win1 *gwin, void (* callback)( int ), int value){
+static void _timer_all(struct global_win1 *gwin,
+		void (*funx)(struct global_win1 *gwin),
+		void (* callback)( int ), int value){
     glutSetWindow(gwin->window_number);
-    run_scan_for_wikialgo(gwin);
-    assign_gol_colors(gwin->gstate,
-    		gwin->cstate,
-    		gwin->wstate.sq_total);
+    funx(gwin);
     glutPostRedisplay();
     glutTimerFunc(gwin->timeout, callback, value);
 }
@@ -48,7 +47,6 @@ static void _setup_window_gol(struct global_win1 *gwin,
 	init_default_new_size(&gwin->wstate, size);
 	setup_squares(gwin);
 	setup_gol_state(&gwin->gstate, gwin->wstate.sq_total);
-	gwin->cstate = calloc(sizeof(*gwin->cstate), gwin->wstate.sq_total);
 	for(int i = 0 ; i < init_arr_sz; i++){
 		gwin->gstate[init_arr[i]].isAlive = 1;
 	}
@@ -61,7 +59,7 @@ static void _setup_window_gol(struct global_win1 *gwin,
 /////////////////////////////////////////////////
 static void timer_redraw_0(int value){
 	struct global_win1 *gwin =  &windows[value];
-	_timer_gol(gwin, timer_redraw_0, value);
+	_timer_all(gwin, run_scan_for_wikialgo, timer_redraw_0, value);
 }
 
 static void display_0()
@@ -87,7 +85,7 @@ static void setup_window_gol0(int gindex){
 ///////////////// second window
 static void timer_redraw_1(int value){
 	struct global_win1 *gwin =  &windows[value];
-	_timer_gol(gwin, timer_redraw_1, value);
+	_timer_all(gwin, run_scan_for_wikialgo, timer_redraw_1, value);
 }
 
 static void display_1()
@@ -113,7 +111,7 @@ static void setup_window_gol1(int gindex){
 ///////////////// third window
 static void timer_redraw_2(int value){
 	struct global_win1 *gwin =  &windows[value];
-	_timer_gol(gwin, timer_redraw_2, value);
+	_timer_all(gwin, run_scan_for_wikialgo, timer_redraw_2, value);
 }
 
 static void display_2()
@@ -136,6 +134,38 @@ static void setup_window_gol2(int gindex){
 			sizeof(init_state) / sizeof(int));
 }
 
+///////////////////////////// now these are xbox functions
+
+static void timer_box_3(int value){
+	struct global_win1 *gwin =  &windows[value];
+	_timer_all(gwin,
+			run_scan_for_xboxdata_depth,
+			timer_box_3,
+			value);
+}
+
+static void display_3()
+{
+	_display_gol(&windows[3]);
+}
+
+static void setup_window_xbox3(int gindex){
+	struct global_win1 *gwin = &windows[gindex];
+
+	gwin->width = 640;
+	gwin->height = 480;
+	glutInitWindowSize(gwin->width, gwin->height);
+	glutInitWindowPosition(0, 550);
+	gwin->name = "xbox";
+	gwin->window_number = glutCreateWindow (gwin->name);
+	init_default_new_size(&gwin->wstate, 0.1);
+	setup_squares(gwin);
+	run_scan_for_xboxdata_depth(gwin);
+	gwin->timeout = 1000; // 1000 msec
+	glutDisplayFunc(display_3);
+	glutTimerFunc(gwin->timeout, timer_box_3, gindex);
+}
+
 void start_impressions(){
 	/* we need to setup the xbox window */
 	/*
@@ -145,8 +175,9 @@ void start_impressions(){
 	 * 4. GOL with xbox data logic = 5
 	 * 5. something with distance and refresh rate = 6
 	 */
-	windows = calloc(sizeof(*windows), 3);
+	windows = calloc(sizeof(*windows), 4);
 	setup_window_gol0(0);
 	setup_window_gol1(1);
 	setup_window_gol2(2);
+	setup_window_xbox3(3);
 }

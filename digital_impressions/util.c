@@ -73,6 +73,8 @@ void setup_squares(struct global_win1 *gwin){
         curr_x = gwin->wstate.bottom_left_x;
     }
     gwin->squares = SX;
+    // allocate squares as well
+    gwin->cstate = calloc(sizeof(*gwin->cstate), gwin->wstate.sq_total);
 }
 
 
@@ -298,19 +300,41 @@ void assign_gol_colors(struct gol_state *gstate, struct color_state *cstate, int
 }
 
 /* it is the responsibility of the caller to set the right window */
-int run_scan_for_wikialgo(struct global_win1 *win){
+void run_scan_for_wikialgo(struct global_win1 *gwin){
     /* clean next generation */
-	int items = win->wstate.sq_total;
+	int items = gwin->wstate.sq_total;
 	for(int i = 0 ;i < items; i++){
-		win->gstate[i].nx_isAlive = 0;
+		gwin->gstate[i].nx_isAlive = 0;
 	}
 	/* calculate the next generation */
 	for(int i = 0 ; i < items; i++){
-		calculate_next_generation_wikialgo(win, i);
+		calculate_next_generation_wikialgo(gwin, i);
 	}
 	/* now we swap */
 	for(int i =0; i < items; i++) {
-		win->gstate[i].isAlive = win->gstate[i].nx_isAlive;
+		gwin->gstate[i].isAlive = gwin->gstate[i].nx_isAlive;
 	}
-	return 0;
+	// we assign color here because timer need to be independent.
+	// timer calls this and display() displays the RGB values
+	assign_gol_colors(gwin->gstate,
+	    		gwin->cstate,
+	    		gwin->wstate.sq_total);
+}
+
+
+static void _run_scan_for_xboxdata(struct global_win1 *gwin, uint8_t *data){
+	// make sure no access to the GOL state
+	int items = gwin->wstate.sq_total;
+	/* calculate the next generation */
+	for(int i = 0 ; i < items; i++){
+		calculate_avg_color_from_xboxdata(gwin, i, data);
+	}
+}
+
+void run_scan_for_xboxdata_depth(struct global_win1 *gwin){
+	_run_scan_for_xboxdata(gwin, depth_front);
+}
+
+void run_scan_for_xboxdata_natural(struct global_win1 *gwin){
+	_run_scan_for_xboxdata(gwin, rgb_front);
 }

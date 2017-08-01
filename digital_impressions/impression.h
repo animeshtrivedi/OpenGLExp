@@ -96,9 +96,16 @@ extern void glPrintSquare(struct square *s, struct color_state *cstate);
 extern void set_black(struct color_state *cstate);
 extern void set_white(struct color_state *cstate);
 extern void set_color(struct color_state *cstate, double r, double g, double b);
-extern int run_scan_for_wikialgo(struct global_win1 *win);
+extern void run_scan_for_wikialgo(struct global_win1 *win);
 extern void walk_and_draw_color(struct global_win1 *gwin, int verbose);
 extern int init_xbox(int argc, char **argv);
 extern void start_impressions();
 extern void assign_gol_colors(struct gol_state *gstate, struct color_state *cstate, int items);
+
+extern uint8_t *depth_mid, *depth_front;
+extern uint8_t *rgb_back, *rgb_mid, *rgb_front;
+
+extern void run_scan_for_xboxdata_depth(struct global_win1 *gwin);
+extern void run_scan_for_xboxdata_natural(struct global_win1 *gwin);
+
 #endif
