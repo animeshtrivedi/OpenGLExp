@@ -334,7 +334,7 @@ void run_scan_for_xboxdata_natural(struct global_win1 *gwin){
 	_run_scan_for_xboxdata(gwin, rgb_front);
 }
 
-static double value_map(char *seq){
+static double value_map_size(char *seq){
 	if(!strcmp(seq, "RGB")){
 		return 0.01; // reg gained mostly from gree - close
 	} else if(!strcmp(seq, "RBG")){
@@ -352,11 +352,29 @@ static double value_map(char *seq){
 	}
 }
 
-static double calculate_order_and_value(struct zoom_state *zstate){
-	int diff_r = zstate->r - zstate->last_r;
-	int diff_g = zstate->g - zstate->last_g;
-	int diff_b = zstate->b - zstate->last_b;
-	int sum = diff_r + diff_g + diff_b;
+static int value_map_timeout(char *seq){
+	if(!strcmp(seq, "RGB")){
+		return 10;
+	} else if(!strcmp(seq, "RBG")){
+		return 50;
+	} else if(!strcmp(seq, "GRB")){
+		return 100;
+	} else if(!strcmp(seq, "GBR")){
+		return 250;
+	} else if(!strcmp(seq, "BRG")){
+		return 500;
+	} else if(!strcmp(seq, "BGR")){
+		return 1000;
+	} else {
+		return 1000;
+	}
+}
+
+static void calculate_order_and_sequence(struct zoom_state *zstate){
+	zstate->diff_r = zstate->r - zstate->last_r;
+	zstate->diff_g = zstate->g - zstate->last_g;
+	zstate->diff_b = zstate->b - zstate->last_b;
+	int sum = zstate->diff_r + zstate->diff_g + zstate->diff_b;
 	printf(" last (%d, %d, %d) now (%d, %d, %d) || GAINS (%d, %d, %d) || sum %d \n",
 				zstate->last_r,
 				zstate->last_g,
@@ -364,40 +382,38 @@ static double calculate_order_and_value(struct zoom_state *zstate){
 				zstate->r,
 				zstate->g,
 				zstate->b,
-				diff_r,
-				diff_g,
-				diff_b,
+				zstate->diff_r,
+				zstate->diff_g,
+				zstate->diff_b,
 				sum);
-	char *s;
-	if(diff_r >= diff_g){
-		if( diff_r >= diff_b){
+	if(zstate->diff_r >= zstate->diff_g){
+		if( zstate->diff_r >= zstate->diff_b){
 			// R is the max
-			if( diff_g >= diff_b)
-				s = "RGB";
+			if( zstate->diff_g >= zstate->diff_b)
+				zstate->seq = "RGB";
 			else
-				s = "RBG";
+				zstate->seq = "RBG";
 		} else {
 			// here we know that B was bigger than R and R was bigger than G
-			s  = "BRG";
+			zstate->seq  = "BRG";
 		}
 	} else {
 		// we know that G > R
-		if( diff_r >= diff_b){
+		if( zstate->diff_r >= zstate->diff_b){
 			// R > B
-			s = "GRB";
+			zstate->seq = "GRB";
 		} else {
 			// B > R and G > R
-			if( diff_g >= diff_b){
-				s = "GBR";
+			if( zstate->diff_g >= zstate->diff_b){
+				zstate->seq = "GBR";
 			} else {
-				s = "BGR";
+				zstate->seq = "BGR";
 			}
 		}
 	}
-	return value_map(s);
 }
 
-double calculate_zoom_size(struct global_win1 *gwin){
+static void calculate_rgb_deltas(struct global_win1 *gwin){
 	// since the zoom factor of gwin is variable we need to scan the raw
 	// data to figure out how many pixels have changed their color on the
 	// spectrum. Also this ensures that the diff gains are on a zero-sum
@@ -434,12 +450,15 @@ double calculate_zoom_size(struct global_win1 *gwin){
 	gwin->zstate.r = now_r;
 	gwin->zstate.g = now_g;
 	gwin->zstate.b = now_b;
-//	printf(" last (%d, %d, %d) now (%d, %d, %d) \n",
-//			gwin->zstate.last_r,
-//			gwin->zstate.last_g,
-//			gwin->zstate.last_b,
-//			gwin->zstate.r,
-//			gwin->zstate.g,
-//			gwin->zstate.b);
-	return calculate_order_and_value(&gwin->zstate);
+	calculate_order_and_sequence(&gwin->zstate);
+}
+
+double calculate_zoom_size(struct global_win1 *gwin){
+	calculate_rgb_deltas(gwin);
+	return value_map_size(gwin->zstate.seq);
+}
+
+int calculate_timeout_wait(struct global_win1 *gwin){
+	calculate_rgb_deltas(gwin);
+	return value_map_timeout(gwin->zstate.seq);
 }

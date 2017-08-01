@@ -66,6 +66,10 @@ struct zoom_state {
 	int last_r, last_g, last_b;
 	/* number of red, green, and blue squares */
 	int r, g, b;
+	/* diff gains */
+	int diff_r, diff_g, diff_b;
+	/* sequence */
+	char *seq;
 };
 
 struct global_win1{

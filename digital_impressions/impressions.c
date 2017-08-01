@@ -208,6 +208,12 @@ static void setup_window_xbox_zoom(int gindex){
 	glutTimerFunc(gwin->timeout, timer_box_zoom, gindex);
 }
 
+///////////////////////////// now these are xbox + GOL functions
+
+
+static void setup_window_xbox_gol(int gindex){
+}
+
 void start_impressions(){
 	/* we need to setup the xbox window */
 	/*
@@ -217,11 +223,11 @@ void start_impressions(){
 	 * 4. GOL with xbox data logic = 5
 	 * 5. something with distance and refresh rate = 6
 	 */
-	windows = calloc(sizeof(*windows), 5);
+	windows = calloc(sizeof(*windows), 6);
 	setup_window_gol0(0);
 	setup_window_gol1(1);
 	setup_window_gol2(2);
 	setup_window_xbox3(3);
-
 	setup_window_xbox_zoom(4);
+	setup_window_xbox_gol(5);
 }
