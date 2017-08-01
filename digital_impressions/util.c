@@ -98,7 +98,7 @@ void walk_and_draw_color(struct global_win1 *gwin, int verbose) {
 void glPrintText(double x, double y, double z, char *string)
 {
 	glColor3f(0, 0, 0);
-	glRasterPos2f(x, y);
+	glRasterPos2f(x + 0.01, y + 0.1); // here is the slack
 	int len = (int) strlen(string);
 	for (int i = 0; i < len; i++)
 	{
@@ -122,7 +122,7 @@ void glPrintSquare(struct square *s, struct color_state *cstate)
 			X="BLUE";
 	}
 
-	snprintf(newx, 32, "(%0.2f, %0.2f, %0.2f) %s",
+	snprintf(newx, 32, "(%0.2f,%0.2f,%0.2f) %s",
 			cstate->r,
 			cstate->g,
 			cstate->b, X);

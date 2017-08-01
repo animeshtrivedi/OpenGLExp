@@ -20,13 +20,17 @@ static void _timer_all(struct global_win1 *gwin,
     glutTimerFunc(gwin->timeout, callback, value);
 }
 
-static void _display_gol(struct global_win1 *gwin)
+static void __display_all(struct global_win1 *gwin, int verbose)
 {
     glutSetWindow(gwin->window_number);
     glClearColor (1.0, 1.0, 1.0, 0.0);
     glClear(GL_COLOR_BUFFER_BIT);
-    walk_and_draw_color(gwin, 0);
+    walk_and_draw_color(gwin, verbose);
     glutSwapBuffers();
+}
+
+static void _display_all(struct global_win1 *gwin){
+	__display_all(gwin, 0);
 }
 
 static void _setup_window_gol(struct global_win1 *gwin,
@@ -64,7 +68,7 @@ static void timer_redraw_0(int value){
 
 static void display_0()
 {
-	_display_gol(&windows[0]);
+	_display_all(&windows[0]);
 }
 
 static void setup_window_gol0(int gindex){
@@ -90,7 +94,7 @@ static void timer_redraw_1(int value){
 
 static void display_1()
 {
-	_display_gol(&windows[1]);
+	_display_all(&windows[1]);
 }
 
 static void setup_window_gol1(int gindex){
@@ -116,7 +120,7 @@ static void timer_redraw_2(int value){
 
 static void display_2()
 {
-	_display_gol(&windows[2]);
+	_display_all(&windows[2]);
 }
 
 static void setup_window_gol2(int gindex){
@@ -146,7 +150,7 @@ static void timer_box_3(int value){
 
 static void display_3()
 {
-	_display_gol(&windows[3]);
+	__display_all(&windows[3], 1);
 }
 
 static void setup_window_xbox3(int gindex){
@@ -158,7 +162,7 @@ static void setup_window_xbox3(int gindex){
 	glutInitWindowPosition(0, 550);
 	gwin->name = "xbox";
 	gwin->window_number = glutCreateWindow (gwin->name);
-	init_default_new_size(&gwin->wstate, 0.1);
+	init_default_new_size(&gwin->wstate, 0.25);
 	setup_squares(gwin);
 	run_scan_for_xboxdata_depth(gwin);
 	gwin->timeout = 1000; // 1000 msec
@@ -185,7 +189,7 @@ static void timer_box_zoom(int value){
 
 static void display_zoom()
 {
-	_display_gol(&windows[4]);
+	_display_all(&windows[4]);
 }
 
 static void setup_window_xbox_zoom(int gindex){
@@ -214,10 +218,10 @@ void start_impressions(){
 	 * 5. something with distance and refresh rate = 6
 	 */
 	windows = calloc(sizeof(*windows), 5);
-	//setup_window_gol0(0);
-	//setup_window_gol1(1);
-	//setup_window_gol2(2);
-	//setup_window_xbox3(3);
+	setup_window_gol0(0);
+	setup_window_gol1(1);
+	setup_window_gol2(2);
+	setup_window_xbox3(3);
 
 	setup_window_xbox_zoom(4);
 }
