@@ -45,6 +45,7 @@ static int got_depth = 0;
 
 static void DrawGLScene()
 {
+	glutSetWindow(window);
     pthread_mutex_lock(&gl_backbuf_mutex);
 
     // When using YUV_RGB mode, RGB frames only arrive at 15Hz, so we shouldn't force them to draw in lock-step.
@@ -142,6 +143,7 @@ static void DrawGLScene()
 
 static void keyPressed(unsigned char key, int x, int y)
 {
+	glutSetWindow(window);
     if (key == 27) {
         die = 1;
         pthread_join(freenect_thread, NULL);
@@ -257,13 +259,13 @@ static void keyPressed(unsigned char key, int x, int y)
 
 static void ReSizeGLScene(int Width, int Height)
 {
+	glutSetWindow(window);
     glViewport(0,0,Width,Height);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     glOrtho (0, 1280, 0, 480, -5.0f, 5.0f);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-
 }
 
 static void InitGL(int Width, int Height)
@@ -292,12 +294,12 @@ static void InitGL(int Width, int Height)
     ReSizeGLScene(Width, Height);
 }
 
-static void *gl_threadfunc()
+static void *gl_threadfunc(int argc, char **argv)
 {
 	// this will become the main function that sets things up
     printf("GL thread\n");
 
-    glutInit(NULL, NULL);
+    glutInit(&argc, argv);
 
     glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_ALPHA | GLUT_DEPTH);
     glutInitWindowSize(1280, 480);
@@ -309,8 +311,7 @@ static void *gl_threadfunc()
     glutIdleFunc(&DrawGLScene);
     glutReshapeFunc(&ReSizeGLScene);
     glutKeyboardFunc(&keyPressed);
-
-    glutMainLoop();
+    InitGL(1280, 480);
     return NULL;
 }
 
@@ -434,7 +435,7 @@ static void *freenect_threadfunc(void *arg)
     return NULL;
 }
 
-int init_xbox() {
+int init_xbox(int argc, char **argv) {
     int res;
 
     depth_mid = (uint8_t*)malloc(640*480*3);
@@ -482,7 +483,7 @@ int init_xbox() {
     }
 
     // OS X requires GLUT to run on the main thread
-    gl_threadfunc(NULL);
+    gl_threadfunc(argc, argv);
 
     return 0;
 }

@@ -1,6 +1,12 @@
 #ifndef IMPRESSION_H
 #define IMPRESSION_H
 
+#if defined(__APPLE__)
+#include <GLUT/glut.h>
+#else
+#include <GL/glut.h>
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -66,6 +72,8 @@ struct global_win1{
 	struct gol_state *gstate;
 
 	struct window_state wstate;
+	int width;
+	int height;
 	int window_number;
 	char *name;
 };
@@ -79,7 +87,7 @@ extern void init_window_state(struct window_state *state,
 			double slack);
 
 extern void init_default_new_size(struct window_state *state, double size);
-extern void setup_gol_state(struct gol_state *gstate, int items);
+extern void setup_gol_state(struct gol_state **gstate, int items);
 extern void setup_squares(struct global_win1 *gwin);
 extern void walk_and_draw_color(struct global_win1 *gwin, int verbose);
 extern void glPrintText(double x, double y, double z, char *string);
@@ -87,5 +95,9 @@ extern void glPrintSquare(struct square *s, struct color_state *cstate);
 extern void set_black(struct color_state *cstate);
 extern void set_white(struct color_state *cstate);
 extern void set_color(struct color_state *cstate, double r, double g, double b);
-
+extern int run_scan_for_wikialgo(struct global_win1 *win);
+extern void walk_and_draw_color(struct global_win1 *gwin, int verbose);
+extern int init_xbox(int argc, char **argv);
+extern void start_impressions();
+extern void assign_gol_colors(struct gol_state *gstate, struct color_state *cstate, int items);
 #endif

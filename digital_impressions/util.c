@@ -7,12 +7,6 @@
 #include <string.h>
 #include <assert.h>
 
-#if defined(__APPLE__)
-#include <GLUT/glut.h>
-#else
-#include <GL/glut.h>
-#endif
-
 #include "impression.h"
 
 void init_window_state(struct window_state *wstate,
@@ -28,7 +22,7 @@ void init_window_state(struct window_state *wstate,
 	wstate->bottom_left_y = bottom_left_y;
 	wstate->top_right_x = top_right_x;
 	wstate->top_right_y = top_right_y;
-	wstate->size = 0.1;
+	wstate->size = size;
 
     wstate->max_xrange = top_right_x - bottom_left_x;
     wstate->max_yrange = top_right_y - bottom_left_y;
@@ -41,11 +35,11 @@ void init_window_state(struct window_state *wstate,
 }
 
 void init_default_new_size(struct window_state *state, double size){
-	init_window_state(state, -1.0, -1.0, 1.0, 1.0, size, 0);
+	init_window_state(state, -1.0, -1.0, 1.0, 1.0, size, 0.01);
 }
 
-void setup_gol_state(struct gol_state *gstate, int items) {
-
+void setup_gol_state(struct gol_state **gstate, int items) {
+	*gstate = calloc(sizeof(**gstate), items);
 }
 
 void setup_squares(struct global_win1 *gwin){
@@ -59,6 +53,10 @@ void setup_squares(struct global_win1 *gwin){
     double curr_x = gwin->wstate.bottom_left_x;
     double curr_y = gwin->wstate.bottom_left_y;
 
+    printf("Number of fixed area squares are: %d  | xrange: %f yrange: %f sizeN: %f \n",
+        		gwin->wstate.sq_total, gwin->wstate.max_xrange,
+        		gwin->wstate.max_yrange, gwin->wstate.size);
+
     for(int i = 0; i < gwin->wstate.sq_count_y; i++){
         for (int j = 0; j < gwin->wstate.sq_count_x; j++){
             struct square *xx = &SX[(i * gwin->wstate.sq_count_x) + j];
@@ -66,6 +64,7 @@ void setup_squares(struct global_win1 *gwin){
             xx->y = curr_y;
             xx->s = gwin->wstate.size;
             xx->index = (i * gwin->wstate.sq_count_x) + j;
+            printf(" \t init SQ %d at %f,%f\n", xx->index, xx->x, xx->y);
             curr_x+=gwin->wstate.size;
         }
         /* move y one up */
@@ -73,6 +72,7 @@ void setup_squares(struct global_win1 *gwin){
         /* reset x */
         curr_x = gwin->wstate.bottom_left_x;
     }
+    gwin->squares = SX;
 }
 
 
@@ -251,7 +251,7 @@ void calculate_next_generation_wikialgo(struct global_win1 *gwin, int index)
     struct square *s = &gwin->squares[index];
     struct gol_state *gstate = gwin->gstate;
     for(int i= 0 ; i < 9; i++){
-        neighbours[i] = next_neighbour_index(gwin->squares,
+        neighbours[i] = next_neighbour_index(s,
         		&gwin->wstate,
         		gwin->wstate.size,
         		i);
@@ -287,9 +287,14 @@ void calculate_next_generation_wikialgo(struct global_win1 *gwin, int index)
     }
 }
 
-void assign_next_generation_wikialgo(struct gol_state *gstate, int items){
-	for(int i =0; i < items; i++)
-		gstate[i].isAlive = gstate[i].nx_isAlive;
+void assign_gol_colors(struct gol_state *gstate, struct color_state *cstate, int items){
+	/* now we need to draw - assign colors first */
+	for(int i = 0 ;i < items; i++){
+		if(gstate[i].isAlive)
+			set_white(&cstate[i]);
+		else
+			set_black(&cstate[i]);
+	}
 }
 
 /* it is the responsibility of the caller to set the right window */
@@ -300,19 +305,12 @@ int run_scan_for_wikialgo(struct global_win1 *win){
 		win->gstate[i].nx_isAlive = 0;
 	}
 	/* calculate the next generation */
-	for(int i = 0 ;i < items; i++){
+	for(int i = 0 ; i < items; i++){
 		calculate_next_generation_wikialgo(win, i);
 	}
 	/* now we swap */
-	assign_next_generation_wikialgo(win->gstate, items);
-	/* now we need to draw - assign colors first */
-	for(int i = 0 ;i < items; i++){
-		if(win->gstate[i].isAlive)
-			set_white(&win->cstate[i]);
-		else
-			set_black(&win->cstate[i]);
+	for(int i =0; i < items; i++) {
+		win->gstate[i].isAlive = win->gstate[i].nx_isAlive;
 	}
-	/* now we draw */
-	walk_and_draw_color(win, 0);
 	return 0;
 }
