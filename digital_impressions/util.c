@@ -30,8 +30,8 @@ void init_window_state(struct window_state *wstate,
     wstate->sq_count_y = wstate->max_yrange / size;
     wstate->sq_total = wstate->sq_count_x * wstate->sq_count_y;
 
-    printf("init: number of squares are : %d  | xrange: %f yrange: %f sizeN: %f \n",
-    		wstate->sq_total, wstate->max_xrange, wstate->max_yrange, wstate->size);
+//    printf("init: number of squares are : %d  | xrange: %f yrange: %f sizeN: %f \n",
+//    		wstate->sq_total, wstate->max_xrange, wstate->max_yrange, wstate->size);
 }
 
 void init_default_new_size(struct window_state *state, double size){
@@ -53,9 +53,9 @@ void setup_squares(struct global_win1 *gwin){
     double curr_x = gwin->wstate.bottom_left_x;
     double curr_y = gwin->wstate.bottom_left_y;
 
-    printf("Number of fixed area squares are: %d  | xrange: %f yrange: %f sizeN: %f \n",
-        		gwin->wstate.sq_total, gwin->wstate.max_xrange,
-        		gwin->wstate.max_yrange, gwin->wstate.size);
+//    printf("Number of fixed area squares are: %d  | xrange: %f yrange: %f sizeN: %f \n",
+//        		gwin->wstate.sq_total, gwin->wstate.max_xrange,
+//        		gwin->wstate.max_yrange, gwin->wstate.size);
 
     for(int i = 0; i < gwin->wstate.sq_count_y; i++){
         for (int j = 0; j < gwin->wstate.sq_count_x; j++){
@@ -64,7 +64,7 @@ void setup_squares(struct global_win1 *gwin){
             xx->y = curr_y;
             xx->s = gwin->wstate.size;
             xx->index = (i * gwin->wstate.sq_count_x) + j;
-            printf(" \t init SQ %d at %f,%f\n", xx->index, xx->x, xx->y);
+//            printf(" \t init SQ %d at %f,%f\n", xx->index, xx->x, xx->y);
             curr_x+=gwin->wstate.size;
         }
         /* move y one up */
@@ -139,11 +139,6 @@ void set_white(struct color_state *cstate){
 }
 
 void set_color(struct color_state *cstate, double r, double g, double b){
-	/* what we do here is to swap the color generations */
-	cstate->last_r = cstate->r;
-	cstate->last_g = cstate->g;
-	cstate->last_b = cstate->b;
-	/* now assign the current generation */
 	cstate->r = r;
 	cstate->g = g;
 	cstate->b = b;
@@ -337,4 +332,114 @@ void run_scan_for_xboxdata_depth(struct global_win1 *gwin){
 
 void run_scan_for_xboxdata_natural(struct global_win1 *gwin){
 	_run_scan_for_xboxdata(gwin, rgb_front);
+}
+
+static double value_map(char *seq){
+	if(!strcmp(seq, "RGB")){
+		return 0.01; // reg gained mostly from gree - close
+	} else if(!strcmp(seq, "RBG")){
+		return 0.03; // reg gained mostly from Blue - close
+	} else if(!strcmp(seq, "GRB")){
+		return 0.05; // green gained mostly from R - away
+	} else if(!strcmp(seq, "GBR")){
+		return 0.04; // green gained mostly from blue -- close
+	} else if(!strcmp(seq, "BRG")){
+		return 0.07; // blue gained mostly from red -- away
+	} else if(!strcmp(seq, "BGR")){
+		return 0.1; // blue gained mostly from green -- away
+	} else {
+		return 0.1;
+	}
+}
+
+static double calculate_order_and_value(struct zoom_state *zstate){
+	int diff_r = zstate->r - zstate->last_r;
+	int diff_g = zstate->g - zstate->last_g;
+	int diff_b = zstate->b - zstate->last_b;
+	int sum = diff_r + diff_g + diff_b;
+	printf(" last (%d, %d, %d) now (%d, %d, %d) || GAINS (%d, %d, %d) || sum %d \n",
+				zstate->last_r,
+				zstate->last_g,
+				zstate->last_b,
+				zstate->r,
+				zstate->g,
+				zstate->b,
+				diff_r,
+				diff_g,
+				diff_b,
+				sum);
+	char *s;
+	if(diff_r >= diff_g){
+		if( diff_r >= diff_b){
+			// R is the max
+			if( diff_g >= diff_b)
+				s = "RGB";
+			else
+				s = "RBG";
+		} else {
+			// here we know that B was bigger than R and R was bigger than G
+			s  = "BRG";
+		}
+	} else {
+		// we know that G > R
+		if( diff_r >= diff_b){
+			// R > B
+			s = "GRB";
+		} else {
+			// B > R and G > R
+			if( diff_g >= diff_b){
+				s = "GBR";
+			} else {
+				s = "BGR";
+			}
+		}
+	}
+	return value_map(s);
+}
+
+double calculate_zoom_size(struct global_win1 *gwin){
+	// since the zoom factor of gwin is variable we need to scan the raw
+	// data to figure out how many pixels have changed their color on the
+	// spectrum. Also this ensures that the diff gains are on a zero-sum
+	// scale
+	int now_r = 0, now_g = 0, now_b = 0;
+	uint8_t r, g, b;
+	for(int i = 0; i < 480; i++){
+		for(int j = 0; j < 640; j++){
+			//Flat[x + WIDTH * (y + DEPTH * z)] = Original[x, y, z]
+			// Original[HEIGHT, WIDTH, DEPTH] then
+			//         [480, 640, 3]
+			int index = ((i*3) * 640 + (j*3));
+			r=rgb_front[index];
+			g=rgb_front[index + 1];
+			b=rgb_front[index + 2];
+			if(r > g){
+				if( r > b)
+					now_r++;
+				else
+					now_b++;
+			} else {
+				if(g > b)
+					now_g++;
+				else
+					now_b++;
+			}
+		}
+	}
+	// now we know how many new pixels are there
+	gwin->zstate.last_r = gwin->zstate.r;
+	gwin->zstate.last_g = gwin->zstate.g;
+	gwin->zstate.last_b = gwin->zstate.b;
+
+	gwin->zstate.r = now_r;
+	gwin->zstate.g = now_g;
+	gwin->zstate.b = now_b;
+//	printf(" last (%d, %d, %d) now (%d, %d, %d) \n",
+//			gwin->zstate.last_r,
+//			gwin->zstate.last_g,
+//			gwin->zstate.last_b,
+//			gwin->zstate.r,
+//			gwin->zstate.g,
+//			gwin->zstate.b);
+	return calculate_order_and_value(&gwin->zstate);
 }

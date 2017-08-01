@@ -166,6 +166,44 @@ static void setup_window_xbox3(int gindex){
 	glutTimerFunc(gwin->timeout, timer_box_3, gindex);
 }
 
+///////////////////////////// now these are xbox functions
+
+static void allocate_state(struct global_win1 *gwin, double size) {
+	init_default_new_size(&gwin->wstate, size);
+	setup_squares(gwin);
+}
+
+static void timer_box_zoom(int value){
+	struct global_win1 *gwin =  &windows[value];
+	double size = calculate_zoom_size(gwin);
+	allocate_state(gwin, size);
+	_timer_all(gwin,
+			run_scan_for_xboxdata_depth,
+			timer_box_zoom,
+			value);
+}
+
+static void display_zoom()
+{
+	_display_gol(&windows[4]);
+}
+
+static void setup_window_xbox_zoom(int gindex){
+	struct global_win1 *gwin = &windows[gindex];
+
+	gwin->width = 640;
+	gwin->height = 480;
+	glutInitWindowSize(gwin->width, gwin->height);
+	glutInitWindowPosition(0, 550);
+	gwin->name = "xbox";
+	gwin->window_number = glutCreateWindow (gwin->name);
+	allocate_state(gwin, 0.1);
+
+	gwin->timeout = 1000; // 1000 msec
+	glutDisplayFunc(display_zoom);
+	glutTimerFunc(gwin->timeout, timer_box_zoom, gindex);
+}
+
 void start_impressions(){
 	/* we need to setup the xbox window */
 	/*
@@ -175,9 +213,11 @@ void start_impressions(){
 	 * 4. GOL with xbox data logic = 5
 	 * 5. something with distance and refresh rate = 6
 	 */
-	windows = calloc(sizeof(*windows), 4);
-	setup_window_gol0(0);
-	setup_window_gol1(1);
-	setup_window_gol2(2);
-	setup_window_xbox3(3);
+	windows = calloc(sizeof(*windows), 5);
+	//setup_window_gol0(0);
+	//setup_window_gol1(1);
+	//setup_window_gol2(2);
+	//setup_window_xbox3(3);
+
+	setup_window_xbox_zoom(4);
 }

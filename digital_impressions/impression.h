@@ -28,8 +28,6 @@ struct square {
 struct color_state{
     /* colors */
     double r,g,b;
-    /* last generation */
-    double last_r, last_g, last_b;
 };
 
 struct gol_state{
@@ -63,6 +61,13 @@ struct global_gol{
 	struct gol_state *gol_state;
 };
 
+struct zoom_state {
+	/* number of red, green, and blue squares in the last generation */
+	int last_r, last_g, last_b;
+	/* number of red, green, and blue squares */
+	int r, g, b;
+};
+
 struct global_win1{
 	/* this contains squares and the gol_state with some global
 	 * variables
@@ -72,6 +77,7 @@ struct global_win1{
 	struct gol_state *gstate;
 
 	struct window_state wstate;
+	struct zoom_state zstate;
 	int width;
 	int height;
 	int window_number;
@@ -107,5 +113,8 @@ extern uint8_t *rgb_back, *rgb_mid, *rgb_front;
 
 extern void run_scan_for_xboxdata_depth(struct global_win1 *gwin);
 extern void run_scan_for_xboxdata_natural(struct global_win1 *gwin);
+extern double calculate_zoom_size(struct global_win1 *gwin);
 
+extern void start_impressions();
+extern int init_xbox(int argc, char **argv);
 #endif
