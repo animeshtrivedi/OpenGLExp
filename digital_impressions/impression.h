@@ -28,6 +28,8 @@ struct square {
 struct color_state{
     /* colors */
     double r,g,b;
+    /* next generation */
+    double nx_r, nx_g, nx_b;
 };
 
 struct gol_state{
@@ -35,6 +37,8 @@ struct gol_state{
 	int isAlive;
 	/* next generation status */
 	int nx_isAlive;
+	/* generation number */
+	long generation_number;
 };
 
 struct window_state{
@@ -121,4 +125,5 @@ extern double calculate_zoom_size(struct global_win1 *gwin);
 
 extern void start_impressions();
 extern int init_xbox(int argc, char **argv);
+extern void run_scan_for_wikialgo_xbox(struct global_win1 *gwin);
 #endif

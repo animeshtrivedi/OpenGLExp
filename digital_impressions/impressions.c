@@ -1,3 +1,6 @@
+#include <time.h>
+#include <stdlib.h>
+
 #include "impression.h"
 
 static struct global_win1 *windows;
@@ -160,7 +163,7 @@ static void setup_window_xbox3(int gindex){
 	gwin->height = 480;
 	glutInitWindowSize(gwin->width, gwin->height);
 	glutInitWindowPosition(0, 550);
-	gwin->name = "xbox";
+	gwin->name = "xbox + square colors";
 	gwin->window_number = glutCreateWindow (gwin->name);
 	init_default_new_size(&gwin->wstate, 0.25);
 	setup_squares(gwin);
@@ -199,7 +202,7 @@ static void setup_window_xbox_zoom(int gindex){
 	gwin->height = 480;
 	glutInitWindowSize(gwin->width, gwin->height);
 	glutInitWindowPosition(0, 550);
-	gwin->name = "xbox";
+	gwin->name = "xbox + zoom";
 	gwin->window_number = glutCreateWindow (gwin->name);
 	allocate_state(gwin, 0.1);
 
@@ -210,10 +213,64 @@ static void setup_window_xbox_zoom(int gindex){
 
 ///////////////////////////// now these are xbox + GOL functions
 
-
-static void setup_window_xbox_gol(int gindex){
+static void display_xbox_gol()
+{
+	_display_all(&windows[5]);
 }
 
+static void timer_xbox_gol(int value){
+	/* now in this function we need to run the GOL and then assign color */
+	struct global_win1 *gwin =  &windows[value];
+	gwin->gstate->generation_number++;
+
+	// every 10th generation we refresh
+	if(gwin->gstate->generation_number%10 == 0)
+		run_scan_for_xboxdata_depth(gwin);
+
+	_timer_all(gwin,
+			run_scan_for_wikialgo_xbox,
+			timer_xbox_gol,
+			value);
+}
+
+static void setup_window_xbox_gol(int gindex){
+	struct global_win1 *gwin = &windows[gindex];
+
+	/* this is the size and number of squares */
+	double size = 0.1;
+	gwin->width = 640;
+	gwin->height = 480;
+	glutInitWindowSize(gwin->width, gwin->height);
+	glutInitWindowPosition(0, 550);
+	gwin->name = "xbox + GOL";
+	gwin->window_number = glutCreateWindow (gwin->name);
+	init_window_state(&gwin->wstate, -1.0, -1.0, 1.0, 1.0, size, 0.01);
+	setup_squares(gwin);
+	setup_gol_state(&gwin->gstate, gwin->wstate.sq_total);
+	gwin->gstate->generation_number = 0;
+
+	//https://stackoverflow.com/questions/822323/how-to-generate-a-random-number-in-c
+	srand(time(NULL));   // should only be called once
+
+	// this needs to be randomized
+	for(int i = 0 ; i < gwin->wstate.sq_total; i++){
+		if(rand() % 2 == 0)
+			gwin->gstate[i].isAlive = 1;
+		else
+			gwin->gstate[i].isAlive = 0;
+	}
+
+	// This needs to change, you get colors from your average calculation
+	run_scan_for_xboxdata_depth(gwin);
+
+	gwin->timeout = 1000; // 1000 msec
+	glutDisplayFunc(display_xbox_gol);
+	glutTimerFunc(gwin->timeout, timer_xbox_gol, gindex);
+}
+
+/////////////////////////////////////////////////////////
+static void setup_window_xbox_cyclic(int gindex){
+}
 void start_impressions(){
 	/* we need to setup the xbox window */
 	/*
@@ -223,11 +280,16 @@ void start_impressions(){
 	 * 4. GOL with xbox data logic = 5
 	 * 5. something with distance and refresh rate = 6
 	 */
-	windows = calloc(sizeof(*windows), 6);
+	windows = calloc(sizeof(*windows), 7);
 	setup_window_gol0(0);
 	setup_window_gol1(1);
 	setup_window_gol2(2);
+	/* This one shows the colors in a square */
 	setup_window_xbox3(3);
+	/* this one does variable zoom */
 	setup_window_xbox_zoom(4);
+	/* this one does xbox + GOL */
 	setup_window_xbox_gol(5);
+	/* TODO: https://en.wikipedia.org/wiki/Cyclic_cellular_automaton */
+	//setup_window_xbox_gol(6);
 }

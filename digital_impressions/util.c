@@ -316,6 +316,90 @@ void run_scan_for_wikialgo(struct global_win1 *gwin){
 	    		gwin->wstate.sq_total);
 }
 
+void calculate_next_generation_wikialgo_xbox(struct global_win1 *gwin, int index)
+{
+    int neighbours[9], total_alive = 0, total_dead = 0;
+    struct square *s = &gwin->squares[index];
+    struct gol_state *gstate = gwin->gstate;
+    /* we calculate these averages anyways */
+    double alive_avg_r=0.0, alive_avg_g=0.0, alive_avg_b=0.0;
+    for(int i= 0 ; i < 9; i++){
+        neighbours[i] = next_neighbour_index(s,
+        		&gwin->wstate,
+        		gwin->wstate.size,
+        		i);
+    }
+    for(int i= 0 ; i < 9; i++){
+        /* for all the valid entries */
+        if(neighbours[i] >= 0){
+            if(gstate[neighbours[i]].isAlive){
+            	/* if alive then we add them up for average */
+            	alive_avg_r+=gwin->cstate[neighbours[i]].r;
+            	alive_avg_g+=gwin->cstate[neighbours[i]].g;
+            	alive_avg_b+=gwin->cstate[neighbours[i]].b;
+                total_alive++;
+            } else {
+                total_dead++;
+            }
+        }
+    }
+    alive_avg_r/=total_alive;
+    alive_avg_g/=total_alive;
+    alive_avg_b/=total_alive;
+
+    /* for this square the next state is */
+    if(gstate[index].isAlive){
+        /* if this was alive */
+        if(total_alive < 2){
+        	gstate[index].nx_isAlive = 0; // dead, underpopulation
+        } else if (total_alive >= 2 && total_alive <= 3){
+        	/* here we use the average for the next generation */
+        	gwin->cstate[index].nx_r = alive_avg_r;
+        	gwin->cstate[index].nx_g = alive_avg_g;
+        	gwin->cstate[index].nx_b = alive_avg_b;
+        	gstate[index].nx_isAlive = 1; // ok
+        } else if (total_alive > 3){
+        	gstate[index].nx_isAlive = 0; // ok, over-population
+        } else {
+            //printf(" ### we stay alive? total_alive %d total_dead %d \n", total_alive, total_dead);
+        }
+    } else {
+        /* we were dead */
+        if(total_alive == 3){
+        	/* here we use the average for the next generation */
+        	gwin->cstate[index].nx_r = alive_avg_r;
+        	gwin->cstate[index].nx_g = alive_avg_g;
+        	gwin->cstate[index].nx_b = alive_avg_b;
+        	gstate[index].nx_isAlive = 1; // re-surrected
+        } else {
+        }
+    }
+}
+
+void run_scan_for_wikialgo_xbox(struct global_win1 *gwin){
+    /* clean next generation state and color */
+	int items = gwin->wstate.sq_total;
+	for(int i = 0 ;i < items; i++){
+		gwin->gstate[i].nx_isAlive = 0;
+		gwin->cstate[i].nx_r = gwin->cstate[i].nx_g =  gwin->cstate[i].nx_b = 0.0;
+	}
+
+	/* calculate the next generation state and color */
+	for(int i = 0 ; i < items; i++){
+		calculate_next_generation_wikialgo_xbox(gwin, i);
+	}
+
+	/* now we swap the color and GOL states */
+	for(int i =0; i < items; i++) {
+		gwin->gstate[i].isAlive = gwin->gstate[i].nx_isAlive;
+		if(gwin->gstate[i].isAlive){
+			/* only if you are alive */
+			gwin->cstate[i].r = gwin->cstate[i].nx_r;
+			gwin->cstate[i].g = gwin->cstate[i].nx_g;
+			gwin->cstate[i].b = gwin->cstate[i].nx_b;
+		}
+	}
+}
 
 static void _run_scan_for_xboxdata(struct global_win1 *gwin, uint8_t *data){
 	// make sure no access to the GOL state
