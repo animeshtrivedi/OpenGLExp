@@ -1,5 +1,6 @@
 #include <time.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 #include "impression.h"
 
@@ -224,8 +225,11 @@ static void timer_xbox_gol(int value){
 	gwin->gstate->generation_number++;
 
 	// every 10th generation we refresh
-	if(gwin->gstate->generation_number%10 == 0)
+	if(gwin->gstate->generation_number == 3)
 		run_scan_for_xboxdata_depth(gwin);
+
+	if(gwin->gstate->generation_number ==5)
+			abort();
 
 	_timer_all(gwin,
 			run_scan_for_wikialgo_xbox,
@@ -269,8 +273,51 @@ static void setup_window_xbox_gol(int gindex){
 }
 
 /////////////////////////////////////////////////////////
-static void setup_window_xbox_cyclic(int gindex){
+
+static void display_cyclic()
+{
+	_display_all(&windows[6]);
 }
+
+static void timer_cyclic(int value){
+	/* now in this function we need to run the GOL and then assign color */
+	struct global_win1 *gwin =  &windows[value];
+	gwin->gstate->generation_number++;
+	printf(" generation %llu \n", gwin->gstate->generation_number);
+	if(gwin->gstate->generation_number == 5){
+		printf(" colors refreshed ");
+		run_scan_for_xboxdata_depth(gwin);
+	}
+
+	_timer_all(gwin,
+			run_scan_for_cyclic_automaton,
+			timer_cyclic,
+			value);
+}
+
+static void setup_window_xbox_cyclic_automaton(int gindex){
+	struct global_win1 *gwin = &windows[gindex];
+	/* this is the size and number of squares */
+	double size = 0.1;
+	gwin->width = 640;
+	gwin->height = 480;
+	glutInitWindowSize(gwin->width, gwin->height);
+	glutInitWindowPosition(0, 550);
+	gwin->name = "cyclic";
+	gwin->window_number = glutCreateWindow (gwin->name);
+	init_window_state(&gwin->wstate, -1.0, -1.0, 1.0, 1.0, size, 0);
+	setup_squares(gwin);
+	setup_gol_state(&gwin->gstate, gwin->wstate.sq_total);
+	gwin->gstate->generation_number = 0;
+
+	// This needs to change, you get colors from your average calculation
+	run_scan_for_xboxdata_depth(gwin);
+
+	gwin->timeout = 1000; // 1000 msec
+	glutDisplayFunc(display_cyclic);
+	glutTimerFunc(gwin->timeout, timer_cyclic, gindex);
+}
+
 void start_impressions(){
 	/* we need to setup the xbox window */
 	/*
@@ -281,15 +328,15 @@ void start_impressions(){
 	 * 5. something with distance and refresh rate = 6
 	 */
 	windows = calloc(sizeof(*windows), 7);
-	setup_window_gol0(0);
-	setup_window_gol1(1);
-	setup_window_gol2(2);
+	//setup_window_gol0(0);
+	//setup_window_gol1(1);
+	//setup_window_gol2(2);
 	/* This one shows the colors in a square */
-	setup_window_xbox3(3);
+	//setup_window_xbox3(3);
 	/* this one does variable zoom */
-	setup_window_xbox_zoom(4);
+	//setup_window_xbox_zoom(4);
 	/* this one does xbox + GOL */
 	setup_window_xbox_gol(5);
 	/* TODO: https://en.wikipedia.org/wiki/Cyclic_cellular_automaton */
-	//setup_window_xbox_gol(6);
+	//setup_window_xbox_cyclic_automaton(6);
 }

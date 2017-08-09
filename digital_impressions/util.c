@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <math.h>
 
 #include "impression.h"
 
@@ -139,14 +140,28 @@ void set_white(struct color_state *cstate){
 }
 
 void set_color(struct color_state *cstate, double r, double g, double b){
+	if(r > 1.0)
+		r = 1.0;
+	if(g > 1.0)
+			g = 1.0;
+	if(b > 1.0)
+			b = 1.0;
+
 	cstate->r = r;
 	cstate->g = g;
 	cstate->b = b;
+	cstate->colx = calculate_cyclic_number(r, g, b);
 }
 
 int xy_to_arrindex(struct window_state *wstate, double x, double y){
-    int indexX = (x - wstate->bottom_left_x) / wstate->size;
-    int indexY = (y - wstate->bottom_left_y) / wstate->size;
+    double indexXk = (x - wstate->bottom_left_x) / wstate->size;
+    double indexYk = (y - wstate->bottom_left_y) / wstate->size;
+    int indexX = ceil(indexXk);
+    int indexY = ceil(indexYk);
+    int index =  ((indexY * wstate->sq_count_x) + indexX);
+    printf(" calculating %f %f (%f %f) to index %d || %d and %d \n", x, y,
+    		ceil(indexXk), ceil(indexYk),
+    		index, indexX, indexY);
     return ((indexY * wstate->sq_count_x) + indexX);
 }
 
@@ -234,13 +249,21 @@ void calculate_avg_color_from_xboxdata(struct global_win1 *gwin, int sq_number,
 		}
 	}
 	// if the value is byte then to normalize it we must divide by 255
-	double xxx = ((x_end - x_start) * (y_end - y_start) * 255);
+	double xxx = ((x_end - x_start) * (y_end - y_start) * 256);
 	rAvg/=xxx;
 	gAvg/=xxx;
 	bAvg/=xxx;
 	set_color(&gwin->cstate[sq_number], rAvg, gAvg, bAvg);
 }
 
+static void show_neighbours(int index, int *neighbours){
+	printf(" SQ %d has ", index);
+	for(int i= 0 ; i < 9; i++){
+		printf(" %d ", neighbours[i]);
+	}
+	printf("\n");
+	fflush(NULL);
+}
 
 void calculate_next_generation_wikialgo(struct global_win1 *gwin, int index)
 {
@@ -253,7 +276,9 @@ void calculate_next_generation_wikialgo(struct global_win1 *gwin, int index)
         		gwin->wstate.size,
         		i);
     }
+    show_neighbours(index, neighbours);
     for(int i= 0 ; i < 9; i++){
+    	assert(neighbours[i] != index);
         /* for all the valid entries */
         if(neighbours[i] >= 0){
             if(gstate[neighbours[i]].isAlive){
@@ -329,7 +354,9 @@ void calculate_next_generation_wikialgo_xbox(struct global_win1 *gwin, int index
         		gwin->wstate.size,
         		i);
     }
+    show_neighbours(index, neighbours);
     for(int i= 0 ; i < 9; i++){
+    	assert(neighbours[i] != index);
         /* for all the valid entries */
         if(neighbours[i] >= 0){
             if(gstate[neighbours[i]].isAlive){
@@ -545,4 +572,74 @@ double calculate_zoom_size(struct global_win1 *gwin){
 int calculate_timeout_wait(struct global_win1 *gwin){
 	calculate_rgb_deltas(gwin);
 	return value_map_timeout(gwin->zstate.seq);
+}
+
+#define MAX_COLORS 256
+int matches(uint8_t value, uint8_t to){
+	uint8_t vx = (value + 1) % MAX_COLORS; // let it over flow
+	return abs(vx - to) <= 5;
+
+}
+uint8_t calculate_cyclic_number(double _r, double _g, double _b){
+	int r = _r * 255;
+	int g = _g * 255;
+	int b = _b * 255;
+	//uint8_t color = (r * 7 / 255) << 5 + (g * 7 / 255) << 2 + (b * 3 / 255);
+	//uint8_t color = (r*6/256)*36 + (g*6/256)*6 + (b*6/256);
+	uint8_t color = ((r%8) << 5) + ((g%8) << 2) + (b%4);
+	printf(" mapping %f %f %f | %d %d %d -> to %d \n", _r, _g, _b, r, g, b, color);
+	return color;
+}
+
+void calculate_next_generation_cyclic_colors(struct global_win1 *gwin, int index)
+{
+    int neighbours[9];
+    int found = 0;
+    struct square *s = &gwin->squares[index];
+    struct color_state *c = gwin->cstate;
+    for(int i= 0 ; i < 9; i++){
+        neighbours[i] = next_neighbour_index(s,
+        		&gwin->wstate,
+        		gwin->wstate.size,
+        		i);
+    }
+    // for all the neighbours we scan
+    for(int i= 0 ; i < 9; i++){
+    	assert(neighbours[i] != index);
+        /* for all the valid entries */
+        if(neighbours[i] >= 0){
+            if(matches(c[index].colx, c[neighbours[i]].colx)){
+            	// we match and hence we inherit */
+            	c[index].nx_colx = c[neighbours[i]].colx;
+            	c[index].nx_r = c[neighbours[i]].r;
+            	c[index].nx_g = c[neighbours[i]].g;
+            	c[index].nx_b = c[neighbours[i]].b;
+            	c[index].changed = 1;
+            	printf(" copying %d to %d \n", neighbours[i], index);
+            }
+        }
+    }
+}
+
+void run_scan_for_cyclic_automaton(struct global_win1 *gwin){
+    /* clean next generation state and color */
+	int items = gwin->wstate.sq_total;
+	for(int i = 0 ;i < items; i++){
+		gwin->cstate[i].nx_colx = 0;
+		gwin->cstate[i].changed = 0;
+	}
+
+	/* calculate the next generation state and color */
+	for(int i = 0 ; i < items; i++){
+		calculate_next_generation_cyclic_colors(gwin, i);
+	}
+
+	/* now we swap the cyclic colors */
+	for(int i =0; i < items; i++) {
+		if(gwin->cstate[i].changed){
+			gwin->cstate[i].r = gwin->cstate[i].nx_r;
+			gwin->cstate[i].g = gwin->cstate[i].nx_g;
+			gwin->cstate[i].b = gwin->cstate[i].nx_b;
+		}
+	}
 }

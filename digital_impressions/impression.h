@@ -30,6 +30,10 @@ struct color_state{
     double r,g,b;
     /* next generation */
     double nx_r, nx_g, nx_b;
+    /* cyclic palate */
+    uint8_t colx;
+    uint8_t nx_colx;
+    uint8_t changed;
 };
 
 struct gol_state{
@@ -126,4 +130,6 @@ extern double calculate_zoom_size(struct global_win1 *gwin);
 extern void start_impressions();
 extern int init_xbox(int argc, char **argv);
 extern void run_scan_for_wikialgo_xbox(struct global_win1 *gwin);
+extern uint8_t calculate_cyclic_number(double r, double g, double b);
+extern void run_scan_for_cyclic_automaton(struct global_win1 *gwin);
 #endif
