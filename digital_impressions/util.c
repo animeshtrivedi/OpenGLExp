@@ -152,7 +152,7 @@ void set_color(struct color_state *cstate, double r, double g, double b){
 	cstate->r = r;
 	cstate->g = g;
 	cstate->b = b;
-	cstate->colx = calculate_cyclic_number(r, g, b, 1);
+	cstate->colx = calculate_cyclic_number(r, g, b, 3);
 }
 
 #if 0
@@ -620,17 +620,29 @@ int calculate_timeout_wait(struct global_win1 *gwin){
 	return value_map_timeout(gwin->zstate.seq);
 }
 
-#define MAX_COLORS 256
+#define MAX_BITS 4
+#define MAX_COLORS (1U << MAX_BITS)
+#define MAX_GAP 1
+
 int matches(uint8_t value, uint8_t to){
 	uint8_t vx = (value + 1) % MAX_COLORS; // let it over flow
-	return abs(vx - to) <= 5;
+	return abs(vx - to) <= MAX_GAP;
 
 }
-uint8_t calculate_cyclic_number(double _r, double _g, double _b, int mode){
+int calculate_cyclic_number(double _r, double _g, double _b, int mode){
 	int r = _r * 255;
 	int g = _g * 255;
 	int b = _b * 255;
-	uint8_t color;
+	int color;
+	int r_bits = MAX_BITS/3;
+	int g_bits = MAX_BITS/3;
+	int b_bits = MAX_BITS - (r_bits + g_bits);
+	int r_mask = 1 << r_bits;
+	int g_mask = 1 << g_bits;
+	int b_mask = 1 << b_bits;
+
+	color = ((r % r_mask) << (g_bits + b_bits)) + ((g % g_mask) << b_bits) + (b % b_mask);
+#if 0
 	if(mode == 1){
 		color = (r * 7 / 255) << 5 + (g * 7 / 255) << 2 + (b * 3 / 255);
 	} else if (mode == 2) {
@@ -638,9 +650,13 @@ uint8_t calculate_cyclic_number(double _r, double _g, double _b, int mode){
 	} else {
 		uint8_t color = ((r%8) << 5) + ((g%8) << 2) + (b%4);
 	}
-	//printf(" mapping %f %f %f | %d %d %d -> to %d \n", _r, _g, _b, r, g, b, color);
+#endif
+	//printf(" mapping %f %f %f | %d %d %d -> to %d || r_bits %d g_bits %d b_bits %d \n",
+	//		_r, _g, _b, r, g, b, color, r_bits, g_bits, b_bits);
+	assert(color <= MAX_COLORS);
 	return color;
 }
+
 
 void calculate_next_generation_cyclic_colors(struct global_win1 *gwin, int index)
 {
@@ -696,3 +712,10 @@ void run_scan_for_cyclic_automaton(struct global_win1 *gwin){
 		}
 	}
 }
+
+double get_next_double(){
+	double range = (1.0 - 0);
+	double div = RAND_MAX / range;
+	return 0.0 + (rand() / div);
+}
+

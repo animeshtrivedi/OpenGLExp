@@ -287,10 +287,20 @@ static void timer_cyclic(int value){
 	struct global_win1 *gwin =  &windows[value];
 	gwin->gstate->generation_number++;
 	printf(" generation %llu \n", gwin->gstate->generation_number);
-	if(gwin->gstate->generation_number == 5 || gwin->gstate->generation_number%100 == 0) {
+	if(gwin->gstate->generation_number == 5 || gwin->gstate->generation_number == 1300) {
+		gwin->timeout = 10;
 		printf(" colors refreshed ");
+#if 0
 		run_scan_for_xboxdata_depth(gwin);
-		gwin->timeout = 100;
+#else
+		for(int i = 0; i < gwin->wstate.sq_total; i++){
+			gwin->cstate[i].r = get_next_double();
+			gwin->cstate[i].g = get_next_double();
+			gwin->cstate[i].b = get_next_double();
+			set_color(&gwin->cstate[i], gwin->cstate[i].r, gwin->cstate[i].g, gwin->cstate[i].b);
+			//printf(" got %d - %f %f %f \n", i, gwin->cstate[i].r, gwin->cstate[i].g, gwin->cstate[i].b);
+		}
+#endif
 	}
 
 	_timer_all(gwin,
