@@ -21,7 +21,9 @@ struct square {
     double x;
     double y;
     double s;
-    /* cell index */
+    /* cell index in 2D */
+    int index_x;
+    int index_y;
     int index;
 };
 
@@ -130,6 +132,6 @@ extern double calculate_zoom_size(struct global_win1 *gwin);
 extern void start_impressions();
 extern int init_xbox(int argc, char **argv);
 extern void run_scan_for_wikialgo_xbox(struct global_win1 *gwin);
-extern uint8_t calculate_cyclic_number(double r, double g, double b);
+extern uint8_t calculate_cyclic_number(double r, double g, double b, int);
 extern void run_scan_for_cyclic_automaton(struct global_win1 *gwin);
 #endif

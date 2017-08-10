@@ -225,12 +225,15 @@ static void timer_xbox_gol(int value){
 	gwin->gstate->generation_number++;
 
 	// every 10th generation we refresh
-	if(gwin->gstate->generation_number == 3)
+	if(gwin->gstate->generation_number % 10 == 0){
 		run_scan_for_xboxdata_depth(gwin);
-
-	if(gwin->gstate->generation_number ==5)
-			abort();
-
+		for(int i = 0 ; i < gwin->wstate.sq_total; i++){
+			if(rand() % 2 == 0)
+				gwin->gstate[i].isAlive = 1;
+			else
+				gwin->gstate[i].isAlive = 0;
+		}
+	}
 	_timer_all(gwin,
 			run_scan_for_wikialgo_xbox,
 			timer_xbox_gol,
@@ -284,9 +287,10 @@ static void timer_cyclic(int value){
 	struct global_win1 *gwin =  &windows[value];
 	gwin->gstate->generation_number++;
 	printf(" generation %llu \n", gwin->gstate->generation_number);
-	if(gwin->gstate->generation_number == 5){
+	if(gwin->gstate->generation_number == 5 || gwin->gstate->generation_number%100 == 0) {
 		printf(" colors refreshed ");
 		run_scan_for_xboxdata_depth(gwin);
+		gwin->timeout = 100;
 	}
 
 	_timer_all(gwin,
@@ -298,7 +302,7 @@ static void timer_cyclic(int value){
 static void setup_window_xbox_cyclic_automaton(int gindex){
 	struct global_win1 *gwin = &windows[gindex];
 	/* this is the size and number of squares */
-	double size = 0.1;
+	double size = 0.01;
 	gwin->width = 640;
 	gwin->height = 480;
 	glutInitWindowSize(gwin->width, gwin->height);
@@ -309,9 +313,6 @@ static void setup_window_xbox_cyclic_automaton(int gindex){
 	setup_squares(gwin);
 	setup_gol_state(&gwin->gstate, gwin->wstate.sq_total);
 	gwin->gstate->generation_number = 0;
-
-	// This needs to change, you get colors from your average calculation
-	run_scan_for_xboxdata_depth(gwin);
 
 	gwin->timeout = 1000; // 1000 msec
 	glutDisplayFunc(display_cyclic);
@@ -336,7 +337,7 @@ void start_impressions(){
 	/* this one does variable zoom */
 	//setup_window_xbox_zoom(4);
 	/* this one does xbox + GOL */
-	setup_window_xbox_gol(5);
+	//setup_window_xbox_gol(5);
 	/* TODO: https://en.wikipedia.org/wiki/Cyclic_cellular_automaton */
-	//setup_window_xbox_cyclic_automaton(6);
+	setup_window_xbox_cyclic_automaton(6);
 }

@@ -64,6 +64,8 @@ void setup_squares(struct global_win1 *gwin){
             xx->x = curr_x;
             xx->y = curr_y;
             xx->s = gwin->wstate.size;
+            xx->index_x = j;
+            xx->index_y = i;
             xx->index = (i * gwin->wstate.sq_count_x) + j;
 //            printf(" \t init SQ %d at %f,%f\n", xx->index, xx->x, xx->y);
             curr_x+=gwin->wstate.size;
@@ -150,9 +152,10 @@ void set_color(struct color_state *cstate, double r, double g, double b){
 	cstate->r = r;
 	cstate->g = g;
 	cstate->b = b;
-	cstate->colx = calculate_cyclic_number(r, g, b);
+	cstate->colx = calculate_cyclic_number(r, g, b, 1);
 }
 
+#if 0
 int xy_to_arrindex(struct window_state *wstate, double x, double y){
     double indexXk = (x - wstate->bottom_left_x) / wstate->size;
     double indexYk = (y - wstate->bottom_left_y) / wstate->size;
@@ -164,6 +167,7 @@ int xy_to_arrindex(struct window_state *wstate, double x, double y){
     		index, indexX, indexY);
     return ((indexY * wstate->sq_count_x) + indexX);
 }
+
 
 int is_xy_outside(struct window_state *wstate, double x, double y){
     /* if you are drawing below , at the limit is fine */
@@ -205,6 +209,44 @@ int next_neighbour_index(struct square *s,
     }
 }
 
+#else
+int is_xy_outside(struct window_state *wstate, int x, int y){
+    int x_in = (x >= 0 && x < wstate->sq_count_x);
+    int y_in = (y >= 0 && y < wstate->sq_count_y);
+    //printf(" %d %d is outside?: %d \n", x, y, !(x_in && y_in));
+    return !(x_in && y_in);
+}
+
+
+int get_valid_index_if_inside(struct window_state *wstate, int x, int y){
+    if(is_xy_outside(wstate, x, y)){
+        return -1;
+    }
+    else {
+        return (x + (y * wstate->sq_count_x));
+    }
+}
+
+/* we calculate from the bottom left to top right neighbours */
+int next_neighbour_index(struct square *s,
+		struct window_state *wstate,
+		double size,
+		int k){
+    switch (k) {
+        case 0: return get_valid_index_if_inside(wstate, s->index_x - 1, s->index_y - 1);
+        case 1: return get_valid_index_if_inside(wstate, s->index_x    , s->index_y - 1);
+        case 2: return get_valid_index_if_inside(wstate, s->index_x + 1, s->index_y - 1);
+
+        case 3: return get_valid_index_if_inside(wstate, s->index_x - 1, s->index_y    );
+        case 4: return -2; // this is you
+        case 5: return get_valid_index_if_inside(wstate, s->index_x + 1, s->index_y    );
+
+        case 6: return get_valid_index_if_inside(wstate, s->index_x - 1, s->index_y  + 1);
+        case 7: return get_valid_index_if_inside(wstate, s->index_x    ,  s->index_y  + 1);
+        case 8: return get_valid_index_if_inside(wstate, s->index_x + 1, s->index_y  + 1);
+    }
+}
+#endif
 
 void calculate_movement_from_squares(struct global_win1 *gwin){
 	/* at this point we have previous generation and the next generation
@@ -276,7 +318,7 @@ void calculate_next_generation_wikialgo(struct global_win1 *gwin, int index)
         		gwin->wstate.size,
         		i);
     }
-    show_neighbours(index, neighbours);
+    //show_neighbours(index, neighbours);
     for(int i= 0 ; i < 9; i++){
     	assert(neighbours[i] != index);
         /* for all the valid entries */
@@ -354,7 +396,7 @@ void calculate_next_generation_wikialgo_xbox(struct global_win1 *gwin, int index
         		gwin->wstate.size,
         		i);
     }
-    show_neighbours(index, neighbours);
+    //show_neighbours(index, neighbours);
     for(int i= 0 ; i < 9; i++){
     	assert(neighbours[i] != index);
         /* for all the valid entries */
@@ -370,6 +412,7 @@ void calculate_next_generation_wikialgo_xbox(struct global_win1 *gwin, int index
             }
         }
     }
+    printf(" alive: %d dead %d ", total_alive, total_dead);
     alive_avg_r/=total_alive;
     alive_avg_g/=total_alive;
     alive_avg_b/=total_alive;
@@ -385,6 +428,7 @@ void calculate_next_generation_wikialgo_xbox(struct global_win1 *gwin, int index
         	gwin->cstate[index].nx_g = alive_avg_g;
         	gwin->cstate[index].nx_b = alive_avg_b;
         	gstate[index].nx_isAlive = 1; // ok
+        	printf(" marking %d alive \n", index);
         } else if (total_alive > 3){
         	gstate[index].nx_isAlive = 0; // ok, over-population
         } else {
@@ -398,6 +442,7 @@ void calculate_next_generation_wikialgo_xbox(struct global_win1 *gwin, int index
         	gwin->cstate[index].nx_g = alive_avg_g;
         	gwin->cstate[index].nx_b = alive_avg_b;
         	gstate[index].nx_isAlive = 1; // re-surrected
+        	printf(" marking %d alive \n", index);
         } else {
         }
     }
@@ -439,6 +484,7 @@ static void _run_scan_for_xboxdata(struct global_win1 *gwin, uint8_t *data){
 
 void run_scan_for_xboxdata_depth(struct global_win1 *gwin){
 	_run_scan_for_xboxdata(gwin, depth_front);
+	//_run_scan_for_xboxdata(gwin, rgb_front);
 }
 
 void run_scan_for_xboxdata_natural(struct global_win1 *gwin){
@@ -580,14 +626,19 @@ int matches(uint8_t value, uint8_t to){
 	return abs(vx - to) <= 5;
 
 }
-uint8_t calculate_cyclic_number(double _r, double _g, double _b){
+uint8_t calculate_cyclic_number(double _r, double _g, double _b, int mode){
 	int r = _r * 255;
 	int g = _g * 255;
 	int b = _b * 255;
-	//uint8_t color = (r * 7 / 255) << 5 + (g * 7 / 255) << 2 + (b * 3 / 255);
-	//uint8_t color = (r*6/256)*36 + (g*6/256)*6 + (b*6/256);
-	uint8_t color = ((r%8) << 5) + ((g%8) << 2) + (b%4);
-	printf(" mapping %f %f %f | %d %d %d -> to %d \n", _r, _g, _b, r, g, b, color);
+	uint8_t color;
+	if(mode == 1){
+		color = (r * 7 / 255) << 5 + (g * 7 / 255) << 2 + (b * 3 / 255);
+	} else if (mode == 2) {
+		color = (r*6/256)*36 + (g*6/256)*6 + (b*6/256);
+	} else {
+		uint8_t color = ((r%8) << 5) + ((g%8) << 2) + (b%4);
+	}
+	//printf(" mapping %f %f %f | %d %d %d -> to %d \n", _r, _g, _b, r, g, b, color);
 	return color;
 }
 
@@ -603,6 +654,7 @@ void calculate_next_generation_cyclic_colors(struct global_win1 *gwin, int index
         		gwin->wstate.size,
         		i);
     }
+    //show_neighbours(index, neighbours);
     // for all the neighbours we scan
     for(int i= 0 ; i < 9; i++){
     	assert(neighbours[i] != index);
@@ -615,7 +667,8 @@ void calculate_next_generation_cyclic_colors(struct global_win1 *gwin, int index
             	c[index].nx_g = c[neighbours[i]].g;
             	c[index].nx_b = c[neighbours[i]].b;
             	c[index].changed = 1;
-            	printf(" copying %d to %d \n", neighbours[i], index);
+            	//printf(" copying colors from %d to %d \n", neighbours[i], index);
+            	break;
             }
         }
     }
