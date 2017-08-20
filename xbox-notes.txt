@@ -1,0 +1,411 @@
+setting up the dev env 
+
+sudo apt-get install git cmake build-essential libusb-1.0-0-dev
+
+Once you plug in, you get 
+[ 3578.843069] usb 2-2: new high-speed USB device number 10 using xhci_hcd
+[ 3578.971157] usb 2-2: New USB device found, idVendor=0409, idProduct=005a
+[ 3578.971160] usb 2-2: New USB device strings: Mfr=0, Product=0, SerialNumber=0
+[ 3578.971696] hub 2-2:1.0: USB hub found
+[ 3578.971791] hub 2-2:1.0: 3 ports detected
+[ 3579.851134] usb 2-2.2: new full-speed USB device number 11 using xhci_hcd
+[ 3579.965272] usb 2-2.2: New USB device found, idVendor=045e, idProduct=02b0
+[ 3579.965275] usb 2-2.2: New USB device strings: Mfr=1, Product=2, SerialNumber=0
+[ 3579.965276] usb 2-2.2: Product: Xbox NUI Motor
+[ 3579.965278] usb 2-2.2: Manufacturer: Microsoft
+[ 3581.367088] usb 2-2.1: new high-speed USB device number 12 using xhci_hcd
+[ 3581.473111] usb 2-2.1: New USB device found, idVendor=045e, idProduct=02ad
+[ 3581.473113] usb 2-2.1: New USB device strings: Mfr=1, Product=2, SerialNumber=3
+[ 3581.473115] usb 2-2.1: Product: Xbox Kinect Audio, © 2011 Microsoft Corporation. All rights reserved.
+[ 3581.473116] usb 2-2.1: Manufacturer: Microsoft
+[ 3581.473117] usb 2-2.1: SerialNumber: A44886B16439044A
+[ 3583.159230] usb 2-2.3: new high-speed USB device number 13 using xhci_hcd
+[ 3583.266669] usb 2-2.3: New USB device found, idVendor=045e, idProduct=02ae
+[ 3583.266672] usb 2-2.3: New USB device strings: Mfr=2, Product=1, SerialNumber=3
+[ 3583.266674] usb 2-2.3: Product: Xbox NUI Camera
+[ 3583.266676] usb 2-2.3: Manufacturer: Microsoft
+[ 3583.266678] usb 2-2.3: SerialNumber: A00361A11615045A
+[ 3584.283449] gspca_main: v2.14.0 registered
+[ 3584.285496] gspca_main: kinect-2.14.0 probing 045e:02ae
+[ 3584.285633] usbcore: registered new interface driver kinect
+
+
+lsusb shows 
+
+Bus 002 Device 013: ID 045e:02ae Microsoft Corp. Xbox NUI Camera
+Bus 002 Device 011: ID 045e:02b0 Microsoft Corp. Xbox NUI Motor
+Bus 002 Device 012: ID 045e:02ad Microsoft Corp. Xbox NUI Audio
+
+
+automatically loaded kernel modules
+
+gspca_kinect           16384  0
+gspca_main             36864  1 gspca_kinect
+
+
+sudo apt-get install freenect  libfreenect-demos
+
+
+sudo freenect-glview -> just works, really cool demo - has lots of keymappings 
+sudo freenect-camtest -> just print some camera and frame information 
+sudo freenect-cpp_pcview -> really cool roatation and impressions 
+sudo freenect-glpclview -> same as above but less interactive 
+sudo freenect-hiview -> split screen color and energy map type stuff 
+sudo freenect-regtest  -> not sure what it did, 
+registration_test_rgb.ppm
+registration_test_depth_raw.pgm
+registration_test_depth_registered.pgm
+registration_test_depth_mm.pgm
+atr@evelyn:~$ 
+
+freenect-tiltdemo -> moves camera motor to demo calibration 
+freenect-chunkview -> has some tilting (up, down, level), led color setting and other demo 
+freenect-cppview -> single window with color and energy map (like hiview)
+freenect-micview -> did not work right 
+freenect-regview -> some over lay mix of read and infra images 
+freenect-wavrecord -> did not work smoothly 
+
+
+http://mitchtech.net/ubuntu-openkinect/
+
+
+
+atr@evelyn:~/src/libfreenect$ sudo apt-get remove freenect  libfreenect-demos
+Reading package lists... Done
+Building dependency tree       
+Reading state information... Done
+The following packages were automatically installed and are no longer required:
+  freeglut3 libfreenect-bin libfreenect-dev libfreenect-doc libfreenect0.5 libusb-1.0-0-dev libusb-1.0-doc
+Use 'sudo apt autoremove' to remove them.
+The following packages will be REMOVED:
+  freenect libfreenect-demos
+0 upgraded, 0 newly installed, 2 to remove and 7 not upgraded.
+After this operation, 36.9 kB disk space will be freed.
+Do you want to continue? [Y/n] y
+(Reading database ... 406777 files and directories currently installed.)
+Removing freenect (1:0.5.3-1) ...
+Removing libfreenect-demos (1:0.5.3-1) ...
+
+
+atr@evelyn:~/src/libfreenect$ sudo apt-get remove libfreenect-demos
+Reading package lists... Done
+Building dependency tree       
+Reading state information... Done
+Package 'libfreenect-demos' is not installed, so not removed
+The following packages were automatically installed and are no longer required:
+  freeglut3 libfreenect-bin libfreenect-dev libfreenect-doc libfreenect0.5 libusb-1.0-0-dev libusb-1.0-doc
+Use 'sudo apt autoremove' to remove them.
+0 upgraded, 0 newly installed, 0 to remove and 7 not upgraded.
+atr@evelyn:~/src/libfreenect$ sudo apt autoremove 
+Reading package lists... Done
+Building dependency tree       
+Reading state information... Done
+The following packages will be REMOVED:
+  freeglut3 libfreenect-bin libfreenect-dev libfreenect-doc libfreenect0.5 libusb-1.0-0-dev libusb-1.0-doc
+0 upgraded, 0 newly installed, 7 to remove and 7 not upgraded.
+After this operation, 3'350 kB disk space will be freed.
+Do you want to continue? [Y/n] y
+(Reading database ... 406769 files and directories currently installed.)
+Removing libfreenect-bin (1:0.5.3-1) ...
+Removing freeglut3:amd64 (2.8.1-2) ...
+Removing libfreenect-dev:amd64 (1:0.5.3-1) ...
+Removing libfreenect-doc (1:0.5.3-1) ...
+Removing libfreenect0.5:amd64 (1:0.5.3-1) ...
+Removing libusb-1.0-0-dev:amd64 (2:1.0.20-1) ...
+Removing libusb-1.0-doc (2:1.0.20-1) ...
+Processing triggers for man-db (2.7.5-1) ...
+Processing triggers for libc-bin (2.23-0ubuntu7) ...
+Processing triggers for doc-base (0.10.7) ...
+Processing 2 removed doc-base files...
+atr@evelyn:~/src/libfreenect$ ^C
+atr@evelyn:~/src/libfreenect$ 
+
+
+atr@evelyn:~/src/libfreenect$ sudo freenect-glview 
+sudo: freenect-glview: command not found
+atr@evelyn:~/src/libfreenect$ 
+
+atr@evelyn:~/src/libfreenect/build$ sudo apt-get install libusb-1.0-0  libusb-1.0-0-dbg  libusb-1.0-0-dev  libusb-1.0-doc 
+
+atr@evelyn:~/src/libfreenect/build$ make
+[  2%] Building C object src/CMakeFiles/freenect.dir/core.c.o
+[  5%] Building C object src/CMakeFiles/freenect.dir/tilt.c.o
+[  8%] Building C object src/CMakeFiles/freenect.dir/cameras.c.o
+[ 11%] Building C object src/CMakeFiles/freenect.dir/flags.c.o
+[ 14%] Building C object src/CMakeFiles/freenect.dir/usb_libusb10.c.o
+[ 17%] Building C object src/CMakeFiles/freenect.dir/registration.c.o
+[ 20%] Building C object src/CMakeFiles/freenect.dir/audio.c.o
+[ 23%] Building C object src/CMakeFiles/freenect.dir/loader.c.o
+/home/atr/src/libfreenect/src/loader.c:82:12: warning: ‘check_version_string’ defined but not used [-Wunused-function]
+ static int check_version_string(fnusb_dev* dev) {
+            ^
+[ 26%] Linking C shared library ../lib/libfreenect.so
+[ 26%] Built target freenect
+[ 52%] Built target freenectstatic
+[ 55%] Linking C executable ../bin/freenect-camtest
+[ 58%] Built target freenect-camtest
+[ 61%] Linking C executable ../bin/freenect-wavrecord
+[ 64%] Built target freenect-wavrecord
+[ 67%] Linking C shared library ../../lib/libfreenect_sync.so
+[ 70%] Built target freenect_sync
+[ 73%] Linking C executable ../bin/freenect-regtest
+[ 76%] Built target freenect-regtest
+[ 79%] Linking C executable ../bin/freenect-tiltdemo
+[ 82%] Built target freenect-tiltdemo
+[ 88%] Built target fakenect
+[ 91%] Linking C executable ../bin/fakenect-record
+[ 94%] Built target fakenect-record
+[100%] Built target freenect_sync_static
+atr@evelyn:~/src/libfreenect/build$ 
+
+
+sudo apt-get install mesa-common-dev libglu1-mesa-dev  libglu1-mesa
+-- Operating system is Linux
+-- Got System Processor x86_64
+-- Linux x86_64 Detected
+-- libfreenect will be installed to /usr/local
+-- Headers will be installed to /usr/local/include/libfreenect
+-- Libraries will be installed to /usr/local/lib
+-- Found libusb-1.0:
+--  - Includes: /usr/include/libusb-1.0
+--  - Libraries: /usr/lib/x86_64-linux-gnu/libusb-1.0.so
+-- Found OpenGL: /usr/lib/x86_64-linux-gnu/libGL.so  
+-- Could NOT find GLUT (missing:  GLUT_glut_LIBRARY GLUT_INCLUDE_DIR) 
+-- Could NOT find GLUT (missing:  GLUT_glut_LIBRARY GLUT_INCLUDE_DIR) 
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /home/atr/src/libfreenect/build
+
+
+Found openGL but glut is still missing? 
+
+
+
+atr@evelyn:~/src/libfreenect/build$ cmake .. 
+-- The C compiler identification is GNU 5.4.0
+-- The CXX compiler identification is GNU 5.4.0
+-- Check for working C compiler: /usr/bin/cc
+-- Check for working C compiler: /usr/bin/cc -- works
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Check for working CXX compiler: /usr/bin/c++
+-- Check for working CXX compiler: /usr/bin/c++ -- works
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Operating system is Linux
+-- Got System Processor x86_64
+-- Linux x86_64 Detected
+-- libfreenect will be installed to /usr/local
+-- Headers will be installed to /usr/local/include/libfreenect
+-- Libraries will be installed to /usr/local/lib
+-- Found libusb-1.0:
+--  - Includes: /usr/include/libusb-1.0
+--  - Libraries: /usr/lib/x86_64-linux-gnu/libusb-1.0.so
+-- Check if the system is big endian
+-- Searching 16 bit integer
+-- Looking for sys/types.h
+-- Looking for sys/types.h - found
+-- Looking for stdint.h
+-- Looking for stdint.h - found
+-- Looking for stddef.h
+-- Looking for stddef.h - found
+-- Check size of unsigned short
+-- Check size of unsigned short - done
+-- Using unsigned short
+-- Check if the system is big endian - little endian
+-- Found PythonInterp: /usr/bin/python (found version "2.7.12") 
+-- Looking for include file pthread.h
+-- Looking for include file pthread.h - found
+-- Looking for pthread_create in pthreads
+-- Looking for pthread_create in pthreads - not found
+-- Looking for pthread_create in pthread
+-- Looking for pthread_create in pthread - found
+-- Found Threads: TRUE  
+-- Found OpenGL: /usr/lib/x86_64-linux-gnu/libGL.so  
+-- Found GLUT: /usr/lib/x86_64-linux-gnu/libglut.so  
+CMake Error: The following variables are used in this project, but they are set to NOTFOUND.
+Please set them or make sure they are set and tested correctly in the CMake files:
+GLUT_Xi_LIBRARY (ADVANCED)
+    linked by target "freenect-glview" in directory /home/atr/src/libfreenect/examples
+    linked by target "freenect-regview" in directory /home/atr/src/libfreenect/examples
+    linked by target "freenect-micview" in directory /home/atr/src/libfreenect/examples
+    linked by target "freenect-glpclview" in directory /home/atr/src/libfreenect/examples
+    linked by target "freenect-hiview" in directory /home/atr/src/libfreenect/examples
+    linked by target "freenect-chunkview" in directory /home/atr/src/libfreenect/examples
+    linked by target "freenect-cppview" in directory /home/atr/src/libfreenect/wrappers/cpp
+    linked by target "freenect-cpp_pcview" in directory /home/atr/src/libfreenect/wrappers/cpp
+GLUT_Xmu_LIBRARY (ADVANCED)
+    linked by target "freenect-glview" in directory /home/atr/src/libfreenect/examples
+    linked by target "freenect-regview" in directory /home/atr/src/libfreenect/examples
+    linked by target "freenect-micview" in directory /home/atr/src/libfreenect/examples
+    linked by target "freenect-glpclview" in directory /home/atr/src/libfreenect/examples
+    linked by target "freenect-hiview" in directory /home/atr/src/libfreenect/examples
+    linked by target "freenect-chunkview" in directory /home/atr/src/libfreenect/examples
+    linked by target "freenect-cppview" in directory /home/atr/src/libfreenect/wrappers/cpp
+    linked by target "freenect-cpp_pcview" in directory /home/atr/src/libfreenect/wrappers/cpp
+
+
+
+sudo apt-get install freeglut3  freeglut3-dbg  freeglut3-dev
+
+next error : 
+
+atr@evelyn:~/src/libfreenect/build$ cmake -L ..
+-- The C compiler identification is GNU 5.4.0
+-- The CXX compiler identification is GNU 5.4.0
+-- Check for working C compiler: /usr/bin/cc
+-- Check for working C compiler: /usr/bin/cc -- works
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Check for working CXX compiler: /usr/bin/c++
+-- Check for working CXX compiler: /usr/bin/c++ -- works
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Operating system is Linux
+-- Got System Processor x86_64
+-- Linux x86_64 Detected
+-- libfreenect will be installed to /usr/local
+-- Headers will be installed to /usr/local/include/libfreenect
+-- Libraries will be installed to /usr/local/lib
+-- Found libusb-1.0:
+--  - Includes: /usr/include/libusb-1.0
+--  - Libraries: /usr/lib/x86_64-linux-gnu/libusb-1.0.so
+-- Check if the system is big endian
+-- Searching 16 bit integer
+-- Looking for sys/types.h
+-- Looking for sys/types.h - found
+-- Looking for stdint.h
+-- Looking for stdint.h - found
+-- Looking for stddef.h
+-- Looking for stddef.h - found
+-- Check size of unsigned short
+-- Check size of unsigned short - done
+-- Using unsigned short
+-- Check if the system is big endian - little endian
+-- Found PythonInterp: /usr/bin/python (found version "2.7.12") 
+-- Looking for include file pthread.h
+-- Looking for include file pthread.h - found
+-- Looking for pthread_create in pthreads
+-- Looking for pthread_create in pthreads - not found
+-- Looking for pthread_create in pthread
+-- Looking for pthread_create in pthread - found
+-- Found Threads: TRUE  
+-- Found OpenGL: /usr/lib/x86_64-linux-gnu/libGL.so  
+-- Found GLUT: /usr/lib/x86_64-linux-gnu/libglut.so  
+CMake Error: The following variables are used in this project, but they are set to NOTFOUND.
+Please set them or make sure they are set and tested correctly in the CMake files:
+GLUT_Xi_LIBRARY (ADVANCED)
+    linked by target "freenect-glview" in directory /home/atr/src/libfreenect/examples
+    linked by target "freenect-regview" in directory /home/atr/src/libfreenect/examples
+    linked by target "freenect-micview" in directory /home/atr/src/libfreenect/examples
+    linked by target "freenect-glpclview" in directory /home/atr/src/libfreenect/examples
+    linked by target "freenect-hiview" in directory /home/atr/src/libfreenect/examples
+    linked by target "freenect-chunkview" in directory /home/atr/src/libfreenect/examples
+    linked by target "freenect-cppview" in directory /home/atr/src/libfreenect/wrappers/cpp
+    linked by target "freenect-cpp_pcview" in directory /home/atr/src/libfreenect/wrappers/cpp
+GLUT_Xmu_LIBRARY (ADVANCED)
+    linked by target "freenect-glview" in directory /home/atr/src/libfreenect/examples
+    linked by target "freenect-regview" in directory /home/atr/src/libfreenect/examples
+    linked by target "freenect-micview" in directory /home/atr/src/libfreenect/examples
+    linked by target "freenect-glpclview" in directory /home/atr/src/libfreenect/examples
+    linked by target "freenect-hiview" in directory /home/atr/src/libfreenect/examples
+    linked by target "freenect-chunkview" in directory /home/atr/src/libfreenect/examples
+    linked by target "freenect-cppview" in directory /home/atr/src/libfreenect/wrappers/cpp
+    linked by target "freenect-cpp_pcview" in directory /home/atr/src/libfreenect/wrappers/cpp
+
+-- Configuring incomplete, errors occurred!
+See also "/home/atr/src/libfreenect/build/CMakeFiles/CMakeOutput.log".
+See also "/home/atr/src/libfreenect/build/CMakeFiles/CMakeError.log".
+-- Cache values
+BUILD_AS3_SERVER:BOOL=OFF
+BUILD_CPACK_DEB:BOOL=OFF
+BUILD_CPACK_RPM:BOOL=OFF
+BUILD_CPACK_TGZ:BOOL=OFF
+BUILD_CPP:BOOL=ON
+BUILD_CV:BOOL=OFF
+BUILD_C_SYNC:BOOL=ON
+BUILD_EXAMPLES:BOOL=ON
+BUILD_FAKENECT:BOOL=ON
+BUILD_OPENNI2_DRIVER:BOOL=OFF
+BUILD_PYTHON:BOOL=OFF
+BUILD_PYTHON2:BOOL=OFF
+BUILD_PYTHON3:BOOL=OFF
+BUILD_REDIST_PACKAGE:BOOL=ON
+CMAKE_BUILD_TYPE:STRING=
+CMAKE_INSTALL_PREFIX:PATH=/usr/local
+LIBUSB_1_INCLUDE_DIR:PATH=/usr/include/libusb-1.0
+LIBUSB_1_LIBRARY:FILEPATH=/usr/lib/x86_64-linux-gnu/libusb-1.0.so
+
+
+Solution: it was missing libxi and libxmu files 
+sudo apt-get install libxmu-dev libxi-dev
+
+
+Now it all compiles and works 
+
+
+
+------------- OPEN NI _____------------------------------
+
+The default download and install does not work. It needs sudo to put a file in 
+the udev rules for its device. 
+
+
+
+how to make its device drivers 
+cmake -L -DBUILD_OPENNI2_DRIVER=ON .
+
+
+
+Links: 
+
+http://robotica.unileon.es/index.php/PCL/OpenNI_tutorial_1:_Installing_and_testing
+
+
+https://fredfire1.wordpress.com/2016/09/23/install-and-setup-kinect-xbox-360-1473-debian-ubuntu-64bit/
+
+
+
+July 2nd 
+--- 
+
+Starting with to find out opengl versions. 1 and 2 are old ones, the latest are 3  and 4
+
+sudo apt install mesa-utils
+
+glxinfo | grep "OpenGL version"
+
+
+atr@evelyn:~$ glxinfo | grep "OpenGL version"
+OpenGL version string: 3.0 Mesa 12.0.6
+atr@evelyn:~$ 
+
+
+RandR library =>  sudo apt-get install xorg-dev libglu1-mesa-dev
+
+
+July5th 
+
+https://en.wikibooks.org/wiki/OpenGL_Programming
+
+For wikipedia sources: 
+atr@evelyn:~$ sudo apt-get install libsdl2-dev (! use 2) 
+
+sudo apt-get install libglew-dev
+
+
+---------------
+
+Notes: 2 programs cannot claim the same USB device
+
+
+
+
