@@ -299,8 +299,6 @@ static void *gl_threadfunc(int argc, char **argv)
 	// this will become the main function that sets things up
     printf("GL thread\n");
 
-    glutInit(&argc, argv);
-
     glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_ALPHA | GLUT_DEPTH);
     glutInitWindowSize(1280, 480);
     glutInitWindowPosition(0, 0);
@@ -450,7 +448,7 @@ int init_xbox(int argc, char **argv) {
         v = powf(v, 3)* 6;
         t_gamma[i] = v*6*256;
     }
-
+#if 1
     if (freenect_init(&f_ctx, NULL) < 0) {
         printf("freenect_init() failed\n");
         return 1;
@@ -475,6 +473,10 @@ int init_xbox(int argc, char **argv) {
         return 1;
     }
 
+#else
+    f_dev = get_device(0);
+    f_ctx = get_context();
+#endif
     res = pthread_create(&freenect_thread, NULL, freenect_threadfunc, NULL);
     if (res) {
         printf("pthread_create failed\n");
