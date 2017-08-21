@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <GL/glut.h>
 
+#include "digital_impressions/impression.h"
+
 int main(int argc, char **argv) {
     printf("Hello, World to OpenGL experiments!\n");
     init_xbox(argc, argv);

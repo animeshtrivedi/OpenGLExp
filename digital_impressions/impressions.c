@@ -286,7 +286,7 @@ static void timer_cyclic(int value){
 	/* now in this function we need to run the GOL and then assign color */
 	struct global_win1 *gwin =  &windows[value];
 	gwin->gstate->generation_number++;
-	printf(" generation %llu \n", gwin->gstate->generation_number);
+	printf(" generation %lu \n", gwin->gstate->generation_number);
 	if(gwin->gstate->generation_number == 5 || gwin->gstate->generation_number == 1300) {
 		gwin->timeout = 10;
 		printf(" colors refreshed ");
