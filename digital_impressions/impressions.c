@@ -185,6 +185,9 @@ static void timer_box_zoom(int value){
 	struct global_win1 *gwin =  &windows[value];
 	double size = calculate_zoom_size(gwin);
 	allocate_state(gwin, size);
+	// between 1,000 and 10,000 milliseconds
+	int new_random_timeout = get_next_int(1000, 10000);
+	gwin->timeout = new_random_timeout;
 	_timer_all(gwin,
 			run_scan_for_xboxdata_depth,
 			timer_box_zoom,
@@ -339,15 +342,15 @@ void start_impressions(){
 	 * 5. something with distance and refresh rate = 6
 	 */
 	windows = calloc(sizeof(*windows), 7);
-	//setup_window_gol0(0);
-	//setup_window_gol1(1);
-	//setup_window_gol2(2);
+	setup_window_gol0(0);
+	setup_window_gol1(1);
+	setup_window_gol2(2);
 	/* This one shows the colors in a square */
-	//setup_window_xbox3(3);
+	setup_window_xbox3(3);
 	/* this one does variable zoom */
-	//setup_window_xbox_zoom(4);
+	setup_window_xbox_zoom(4);
 	/* this one does xbox + GOL */
-	//setup_window_xbox_gol(5);
+	setup_window_xbox_gol(5);
 	/* TODO: https://en.wikipedia.org/wiki/Cyclic_cellular_automaton */
 	setup_window_xbox_cyclic_automaton(6);
 }

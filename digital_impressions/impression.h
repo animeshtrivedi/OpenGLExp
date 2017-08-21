@@ -135,4 +135,5 @@ extern void run_scan_for_wikialgo_xbox(struct global_win1 *gwin);
 extern int calculate_cyclic_number(double r, double g, double b, int);
 extern void run_scan_for_cyclic_automaton(struct global_win1 *gwin);
 extern double get_next_double();
+extern int get_next_int(int min, int max);
 #endif

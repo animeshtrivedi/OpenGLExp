@@ -622,7 +622,7 @@ int calculate_timeout_wait(struct global_win1 *gwin){
 
 #define MAX_BITS 4
 #define MAX_COLORS (1U << MAX_BITS)
-#define MAX_GAP 1
+#define MAX_GAP 4
 
 int matches(uint8_t value, uint8_t to){
 	uint8_t vx = (value + 1) % MAX_COLORS; // let it over flow
@@ -719,3 +719,6 @@ double get_next_double(){
 	return 0.0 + (rand() / div);
 }
 
+int get_next_int(int min, int max){
+	return rand() % (max + 1 - min) + min;
+}
