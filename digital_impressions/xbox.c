@@ -458,9 +458,14 @@ int init_xbox(int argc, char **argv) {
     freenect_select_subdevices(f_ctx, (freenect_device_flags)(FREENECT_DEVICE_MOTOR | FREENECT_DEVICE_CAMERA));
 
     int nr_devices = freenect_num_devices (f_ctx);
-    printf ("Number of devices found: %d\n", nr_devices);
 
     int user_device_number = 0;
+    printf ("Number of devices found: %d || %d \n", nr_devices, argc);
+    if(argc == 2){
+    	/* we take the second parameter and make it int */
+    	user_device_number = atoi(argv[1]);
+    }
+    printf ("Chosen device number %d \n", user_device_number);
 
     if (nr_devices < 1) {
         freenect_shutdown(f_ctx);
