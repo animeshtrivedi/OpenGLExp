@@ -127,7 +127,7 @@ extern uint8_t *rgb_back, *rgb_mid, *rgb_front;
 
 extern void run_scan_for_xboxdata_depth(struct global_win1 *gwin);
 extern void run_scan_for_xboxdata_natural(struct global_win1 *gwin);
-extern double calculate_zoom_size(struct global_win1 *gwin);
+extern double calculate_zoom_size(struct global_win1 *gwin, long);
 
 extern void start_impressions();
 extern int init_xbox(int argc, char **argv);
