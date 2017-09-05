@@ -48,6 +48,7 @@ static void _setup_window_gol(struct global_win1 *gwin,
 {
 	gwin->width = 640;
 	gwin->height = 480;
+	glutInitDisplayMode(GLUT_RGBA|GLUT_DOUBLE|GLUT_DEPTH);
 	glutInitWindowSize(gwin->width, gwin->height);
 	glutInitWindowPosition(0, 550);
 	gwin->name = win_name;
@@ -182,11 +183,13 @@ static void allocate_state(struct global_win1 *gwin, double size) {
 }
 
 static void timer_box_zoom(int value){
+	static long countx = 0;
 	struct global_win1 *gwin =  &windows[value];
-	double size = calculate_zoom_size(gwin);
+	countx++;
+	double size = calculate_zoom_size(gwin, countx);
 	allocate_state(gwin, size);
 	// between 1,000 and 10,000 milliseconds
-	int new_random_timeout = get_next_int(1000, 10000);
+	int new_random_timeout = get_next_int(1000, 5000);
 	gwin->timeout = new_random_timeout;
 	_timer_all(gwin,
 			run_scan_for_xboxdata_depth,
@@ -290,9 +293,8 @@ static void timer_cyclic(int value){
 	struct global_win1 *gwin =  &windows[value];
 	gwin->gstate->generation_number++;
 	printf(" generation %lu \n", gwin->gstate->generation_number);
-	if(gwin->gstate->generation_number == 5 || gwin->gstate->generation_number == 1300) {
-		gwin->timeout = 10;
-		printf(" colors refreshed ");
+	if(gwin->gstate->generation_number == 5 || gwin->gstate->generation_number%100 == 0) {
+		gwin->timeout = 300;
 #if 0
 		run_scan_for_xboxdata_depth(gwin);
 #else
