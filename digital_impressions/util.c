@@ -491,7 +491,8 @@ void run_scan_for_xboxdata_natural(struct global_win1 *gwin){
 	_run_scan_for_xboxdata(gwin, rgb_front);
 }
 
-static double value_map_size(char *seq){
+static double value_map_size(char *seq, long gen_number){
+#if 0
 	if(!strcmp(seq, "RGB")){
 		return 0.01; // reg gained mostly from gree - close
 	} else if(!strcmp(seq, "RBG")){
@@ -507,6 +508,18 @@ static double value_map_size(char *seq){
 	} else {
 		return 0.1;
 	}
+#endif
+	int x = gen_number % 5;
+	if(x == 0)
+		return 0.01;
+	else if (x == 1)
+    	return 0.03;
+	else if (x == 2)
+	    return 0.05;
+	else if (x == 3)
+		 return 0.07;
+	else
+		 return 0.1;
 }
 
 static int value_map_timeout(char *seq){
@@ -610,9 +623,9 @@ static void calculate_rgb_deltas(struct global_win1 *gwin){
 	calculate_order_and_sequence(&gwin->zstate);
 }
 
-double calculate_zoom_size(struct global_win1 *gwin){
+double calculate_zoom_size(struct global_win1 *gwin, long gen_number){
 	calculate_rgb_deltas(gwin);
-	return value_map_size(gwin->zstate.seq);
+	return value_map_size(gwin->zstate.seq, gen_number);
 }
 
 int calculate_timeout_wait(struct global_win1 *gwin){
@@ -622,7 +635,7 @@ int calculate_timeout_wait(struct global_win1 *gwin){
 
 #define MAX_BITS 4
 #define MAX_COLORS (1U << MAX_BITS)
-#define MAX_GAP 4
+#define MAX_GAP 8
 
 int matches(uint8_t value, uint8_t to){
 	uint8_t vx = (value + 1) % MAX_COLORS; // let it over flow
